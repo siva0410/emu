@@ -6,10 +6,32 @@ import (
 	"os"
 )
 
-// // CPU
-// func load_inst(b byte) {
-// 	fmt.Println(b)
-// }
+// Global
+
+/*
+   memory map
+   Address range	Size	Device
+   $0000-$07FF	$0800	2KB internal RAM
+   $0800-$0FFF	$0800	Mirrors of $0000-$07FF
+   $1000-$17FF	$0800
+   $1800-$1FFF	$0800
+   $2000-$2007	$0008	NES PPU registers
+   $2008-$3FFF	$1FF8	Mirrors of $2000-2007 (repeats every 8 bytes)
+   $4000-$4017	$0018	NES APU and I/O registers
+   $4018-$401F	$0008	APU and I/O functionality that is normally disabled. See
+   CPU Test Mode.
+   $4020-$FFFF	$BFE0	Cartridge space: PRG ROM, PRG RAM, and mapper registers
+   $6000-$7FFF = Battery Backed Save or Work RAM
+   $8000-$FFFF = Usual ROM, commonly with Mapper Registers (see MMC1 and UxROM for example)
+   $FFFA-$FFFB = NMI vector
+   $FFFC-$FFFD = Reset vector
+   $FFFE-$FFFF = IRQ/BRK vector
+*/
+var CPU_MEM [0xFFFF]byte
+var PPU_MEM [0xFFFF]byte
+
+var PRG_ROM_ADDR int = 0x8000
+var CHR_ROM_ADDR int
 
 func main() {
 	// Read ROM
@@ -23,7 +45,6 @@ func main() {
 	defer f.Close()
 
 	rom, err := ioutil.ReadAll(f)
-	fmt.Print(rom)
 
 	/*
 	   Header (16 bytes)
@@ -33,7 +54,7 @@ func main() {
 
 	HEADER_SIZE := 0x0010
 	PRG_ROM_SIZE := 0x4000
-	CHR_ROM_SIZE := 0x2000
+	// CHR_ROM_SIZE := 0x2000
 
 	/*
 	   Header
@@ -49,9 +70,14 @@ func main() {
 	*/
 
 	PRG_ROM_PAGES := int(rom[4])
-	CHR_ROM_PAGES := int(rom[5])
-	CHR_ROM_START := HEADER_SIZE + PRG_ROM_PAGES*PRG_ROM_SIZE
+	// CHR_ROM_PAGES := int(rom[5])
+	// CHR_ROM_START := HEADER_SIZE + PRG_ROM_PAGES*PRG_ROM_SIZE
 
-	fmt.Println(PRG_ROM_PAGES, CHR_ROM_PAGES, CHR_ROM_START, CHR_ROM_SIZE)
+	prg_rom := rom[HEADER_SIZE : HEADER_SIZE+PRG_ROM_PAGES*PRG_ROM_SIZE]
+	// chr_rom := rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
+
+	copy(CPU_MEM[PRG_ROM_ADDR:], prg_rom[:])
+	// copy(CPU_MEM[CHR_ROM_ADDR:], chr_rom[:])
+	fmt.Println(prg_rom, CPU_MEM[PRG_ROM_ADDR:])
 
 }
