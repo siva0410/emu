@@ -100,6 +100,78 @@ func fetchPC() byte {
 	return CPU_MEM[reg.PC]
 }
 
+/*
+   |---------------------+--------------|
+   | Addressing mode     | Abbreviation |
+   |---------------------+--------------|
+   | zeroPage            | ZERO         |
+   | relative            |              |
+   | implied             |              |
+   | absolute            | ABS          |
+   | accumulator         |              |
+   | immediate           | IMM          |
+   | zeroPageX           | ZEROX        |
+   | zeroPageY           | ZEROY        |
+   | absoluteX           | ABSX         |
+   | absoluteY           | ABSY         |
+   | preIndexedIndirect  | INDX         |
+   | postIndexedIndirect | INDY         |
+   | indirectAbsolute    | INDABS       |
+   |---------------------+--------------|
+*/
+func getOperand(mode string) uint16 {
+	var operand uint16
+	var tmp uint16
+	switch mode {
+	case "IMM":
+		operand = uint16(fetchPC())
+		reg.PC++
+	case "ZERO":
+		operand = uint16(fetchPC() & 0xFF)
+		reg.PC++
+	case "ZEROX":
+		operand = uint16((fetchPC() + reg.X) & 0xFF)
+		reg.PC++
+	case "ZEROY":
+		operand = uint16((fetchPC() + reg.Y) & 0xFF)
+		reg.PC++
+	case "ABS":
+		tmp = uint16(fetchPC())
+		reg.PC++
+		operand = tmp + uint16(fetchPC())<<0x8
+		reg.PC++
+	case "ABSX":
+		tmp = uint16(fetchPC())
+		reg.PC++
+		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.X)
+		reg.PC++
+	case "ABSY":
+		tmp = uint16(fetchPC())
+		reg.PC++
+		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.Y)
+		reg.PC++
+	case "INDX":
+		tmp = uint16((fetchPC() + reg.X) & 0xFF)
+		reg.PC++
+		operand = (tmp + uint16(fetchPC())<<0x8)
+		reg.PC++
+	case "INDY":
+		tmp = uint16((fetchPC() + reg.Y) & 0xFF)
+		reg.PC++
+		operand = (tmp + uint16(fetchPC())<<0x8)
+		reg.PC++
+	case "INDABS":
+		tmp = uint16(fetchPC())
+		reg.PC++
+		tmp = tmp + uint16(fetchPC())<<0x8
+		reg.PC++
+		operand = (uint16(CPU_MEM[tmp])&0xFF + uint16(fetchPC())<<0x8)
+		reg.PC++
+	default:
+	}
+	return operand
+}
+
 // Execute loaded ROM
 func Exec(path string) {
 	loadRom(path)
@@ -107,14 +179,14 @@ func Exec(path string) {
 	reg = initRegister()
 	reg = resetRegister()
 
-	opcode := fetchPC()
-	fmt.Printf("reset:%x \n", opcode)
 	test()
 
-	for i := 0; i < 50; i++ {
+	var opcode byte
+	for i := 0; i < 150; i++ {
 		opcode = fetchPC()
-		fmt.Printf("NUM:%x\tOP:%s\tMODE:%s\n", opcode, inst_arr[opcode].name, inst_arr[opcode].mode)
 		reg.PC++
-		fmt.Println(reg.PC)
+
+		fmt.Printf("NUM:%x\tOP:%s\tMODE:%s\tOPERAND:%x\n", opcode, inst_arr[opcode].name, inst_arr[opcode].mode, getOperand(inst_arr[opcode].mode))
+
 	}
 }
