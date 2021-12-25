@@ -29,7 +29,7 @@ var inst_arr [0x100]InstList
 
 func initInstList() {
 	for i := 0; i < 0x100; i++ {
-		inst_arr[i] = InstList{"", "UNDEFINED", 0}
+		inst_arr[i] = InstList{"NOP", "NOP", cycle_list[i]}
 	}
 }
 
@@ -71,25 +71,25 @@ func setInstList() {
 	inst_arr[0x8C] = InstList{"STY", "ABS", cycle_list[0x8C]}
 	inst_arr[0x94] = InstList{"STY", "ZEROX", cycle_list[0x94]}
 
-	inst_arr[0x8A] = InstList{"TXA", "", cycle_list[0x8A]}
+	inst_arr[0x8A] = InstList{"TXA", "IMPL", cycle_list[0x8A]}
 
-	inst_arr[0x98] = InstList{"TYA", "", cycle_list[0x98]}
+	inst_arr[0x98] = InstList{"TYA", "IMPL", cycle_list[0x98]}
 
-	inst_arr[0x9A] = InstList{"TXS", "", cycle_list[0x9A]}
+	inst_arr[0x9A] = InstList{"TXS", "IMPL", cycle_list[0x9A]}
 
-	inst_arr[0xBA] = InstList{"TSX", "", cycle_list[0xBA]}
+	inst_arr[0xBA] = InstList{"TSX", "IMPL", cycle_list[0xBA]}
 
-	inst_arr[0xA8] = InstList{"TAY", "", cycle_list[0xA8]}
+	inst_arr[0xA8] = InstList{"TAY", "IMPL", cycle_list[0xA8]}
 
-	inst_arr[0xAA] = InstList{"TAX", "", cycle_list[0xAA]}
+	inst_arr[0xAA] = InstList{"TAX", "IMPL", cycle_list[0xAA]}
 
-	inst_arr[0x08] = InstList{"PHP", "", cycle_list[0x08]}
+	inst_arr[0x08] = InstList{"PHP", "IMPL", cycle_list[0x08]}
 
-	inst_arr[0x28] = InstList{"PLP", "", cycle_list[0x28]}
+	inst_arr[0x28] = InstList{"PLP", "IMPL", cycle_list[0x28]}
 
-	inst_arr[0x48] = InstList{"PHA", "", cycle_list[0x48]}
+	inst_arr[0x48] = InstList{"PHA", "IMPL", cycle_list[0x48]}
 
-	inst_arr[0x68] = InstList{"PLA", "", cycle_list[0x68]}
+	inst_arr[0x68] = InstList{"PLA", "IMPL", cycle_list[0x68]}
 
 	inst_arr[0x69] = InstList{"ADC", "IMM", cycle_list[0x69]}
 	inst_arr[0x65] = InstList{"ADC", "ZERO", cycle_list[0x65]}
@@ -156,75 +156,75 @@ func setInstList() {
 	inst_arr[0x24] = InstList{"BIT", "ZERO", cycle_list[0x24]}
 	inst_arr[0x2C] = InstList{"BIT", "ABS", cycle_list[0x2C]}
 
-	inst_arr[0x0A] = InstList{"ASL", "", cycle_list[0x0A]}
+	inst_arr[0x0A] = InstList{"ASL", "ACCUM", cycle_list[0x0A]}
 	inst_arr[0x06] = InstList{"ASL", "ZERO", cycle_list[0x06]}
 	inst_arr[0x0E] = InstList{"ASL", "ABS", cycle_list[0x0E]}
 	inst_arr[0x16] = InstList{"ASL", "ZEROX", cycle_list[0x16]}
 	inst_arr[0x1E] = InstList{"ASL", "ABSX", cycle_list[0x1E]}
 
-	inst_arr[0x4A] = InstList{"LSR", "", cycle_list[0x4A]}
+	inst_arr[0x4A] = InstList{"LSR", "ACCUM", cycle_list[0x4A]}
 	inst_arr[0x46] = InstList{"LSR", "ZERO", cycle_list[0x46]}
 	inst_arr[0x4E] = InstList{"LSR", "ABS", cycle_list[0x4E]}
 	inst_arr[0x56] = InstList{"LSR", "ZEROX", cycle_list[0x56]}
 	inst_arr[0x5E] = InstList{"LSR", "ABSX", cycle_list[0x5E]}
 
-	inst_arr[0x2A] = InstList{"ROL", "", cycle_list[0x2A]}
+	inst_arr[0x2A] = InstList{"ROL", "ACCUM", cycle_list[0x2A]}
 	inst_arr[0x26] = InstList{"ROL", "ZERO", cycle_list[0x26]}
 	inst_arr[0x2E] = InstList{"ROL", "ABS", cycle_list[0x2E]}
 	inst_arr[0x36] = InstList{"ROL", "ZEROX", cycle_list[0x36]}
 	inst_arr[0x3E] = InstList{"ROL", "ABSX", cycle_list[0x3E]}
 
-	inst_arr[0x6A] = InstList{"ROR", "", cycle_list[0x6A]}
+	inst_arr[0x6A] = InstList{"ROR", "ACCUM", cycle_list[0x6A]}
 	inst_arr[0x66] = InstList{"ROR", "ZERO", cycle_list[0x66]}
 	inst_arr[0x6E] = InstList{"ROR", "ABS", cycle_list[0x6E]}
 	inst_arr[0x76] = InstList{"ROR", "ZEROX", cycle_list[0x76]}
 	inst_arr[0x7E] = InstList{"ROR", "ABSX", cycle_list[0x7E]}
 
-	inst_arr[0xE8] = InstList{"INX", "", cycle_list[0xE8]}
+	inst_arr[0xE8] = InstList{"INX", "IMPL", cycle_list[0xE8]}
 
-	inst_arr[0xC8] = InstList{"INY", "", cycle_list[0xC8]}
+	inst_arr[0xC8] = InstList{"INY", "IMPL", cycle_list[0xC8]}
 
 	inst_arr[0xE6] = InstList{"INC", "ZERO", cycle_list[0xE6]}
 	inst_arr[0xEE] = InstList{"INC", "ABS", cycle_list[0xEE]}
 	inst_arr[0xF6] = InstList{"INC", "ZEROX", cycle_list[0xF6]}
 	inst_arr[0xFE] = InstList{"INC", "ABSX", cycle_list[0xFE]}
 
-	inst_arr[0xCA] = InstList{"DEX", "", cycle_list[0xCA]}
+	inst_arr[0xCA] = InstList{"DEX", "IMPL", cycle_list[0xCA]}
 
-	inst_arr[0x88] = InstList{"DEY", "", cycle_list[0x88]}
+	inst_arr[0x88] = InstList{"DEY", "IMPL", cycle_list[0x88]}
 
 	inst_arr[0xC6] = InstList{"DEC", "ZERO", cycle_list[0xC6]}
 	inst_arr[0xCE] = InstList{"DEC", "ABS", cycle_list[0xCE]}
 	inst_arr[0xD6] = InstList{"DEC", "ZEROX", cycle_list[0xD6]}
 	inst_arr[0xDE] = InstList{"DEC", "ABSX", cycle_list[0xDE]}
 
-	inst_arr[0x18] = InstList{"CLC", "", cycle_list[0x18]}
-	inst_arr[0x58] = InstList{"CLI", "", cycle_list[0x58]}
-	inst_arr[0xB8] = InstList{"CLV", "", cycle_list[0xB8]}
-	inst_arr[0xD8] = InstList{"CLD", "", cycle_list[0xD8]}
+	inst_arr[0x18] = InstList{"CLC", "IMPL", cycle_list[0x18]}
+	inst_arr[0x58] = InstList{"CLI", "IMPL", cycle_list[0x58]}
+	inst_arr[0xB8] = InstList{"CLV", "IMPL", cycle_list[0xB8]}
+	inst_arr[0xD8] = InstList{"CLD", "IMPL", cycle_list[0xD8]}
 
-	inst_arr[0x38] = InstList{"SEC", "", cycle_list[0x38]}
-	inst_arr[0x78] = InstList{"SEI", "", cycle_list[0x78]}
-	inst_arr[0xF8] = InstList{"SED", "", cycle_list[0xF8]}
+	inst_arr[0x38] = InstList{"SEC", "IMPL", cycle_list[0x38]}
+	inst_arr[0x78] = InstList{"SEI", "IMPL", cycle_list[0x78]}
+	inst_arr[0xF8] = InstList{"SED", "IMPL", cycle_list[0xF8]}
 
-	inst_arr[0xEA] = InstList{"NOP", "", cycle_list[0xEA]}
+	inst_arr[0xEA] = InstList{"NOP", "IMPL", cycle_list[0xEA]}
 
-	inst_arr[0x00] = InstList{"BRK", "", cycle_list[0x00]}
+	inst_arr[0x00] = InstList{"BRK", "IMPL", cycle_list[0x00]}
 
 	inst_arr[0x20] = InstList{"JSR", "ABS", cycle_list[0x20]}
 	inst_arr[0x4C] = InstList{"JMP", "ABS", cycle_list[0x4C]}
 	inst_arr[0x6C] = InstList{"SEC", "INDABS", cycle_list[0x6C]}
 
-	inst_arr[0x40] = InstList{"RTI", "", cycle_list[0x40]}
-	inst_arr[0x60] = InstList{"RTS", "", cycle_list[0x60]}
+	inst_arr[0x40] = InstList{"RTI", "IMPL", cycle_list[0x40]}
+	inst_arr[0x60] = InstList{"RTS", "IMPL", cycle_list[0x60]}
 
-	inst_arr[0x10] = InstList{"BPL", "", cycle_list[0x10]}
-	inst_arr[0x30] = InstList{"BMI", "", cycle_list[0x30]}
-	inst_arr[0x50] = InstList{"BVC", "", cycle_list[0x50]}
-	inst_arr[0x70] = InstList{"BVS", "", cycle_list[0x70]}
-	inst_arr[0x90] = InstList{"BCC", "", cycle_list[0x90]}
-	inst_arr[0xB0] = InstList{"BCS", "", cycle_list[0xB0]}
-	inst_arr[0xD0] = InstList{"BNE", "", cycle_list[0xD0]}
-	inst_arr[0xF0] = InstList{"BEQ", "", cycle_list[0xF0]}
+	inst_arr[0x10] = InstList{"BPL", "REL", cycle_list[0x10]}
+	inst_arr[0x30] = InstList{"BMI", "REL", cycle_list[0x30]}
+	inst_arr[0x50] = InstList{"BVC", "REL", cycle_list[0x50]}
+	inst_arr[0x70] = InstList{"BVS", "REL", cycle_list[0x70]}
+	inst_arr[0x90] = InstList{"BCC", "REL", cycle_list[0x90]}
+	inst_arr[0xB0] = InstList{"BCS", "REL", cycle_list[0xB0]}
+	inst_arr[0xD0] = InstList{"BNE", "REL", cycle_list[0xD0]}
+	inst_arr[0xF0] = InstList{"BEQ", "REL", cycle_list[0xF0]}
 
 }

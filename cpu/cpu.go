@@ -109,8 +109,8 @@ func resetRegister() *Register {
    +--------- Negative
 */
 func setStatus(flagname string, status bool) {
-	if !status {
-		// status = false
+	if status {
+		// status = true
 		switch flagname {
 		case "carry":
 			reg.P |= 0b00000001
@@ -130,7 +130,7 @@ func setStatus(flagname string, status bool) {
 			reg.P |= 0b10000000
 		}
 	} else {
-		// staus = true
+		// staus = false
 		switch flagname {
 		case "carry":
 			reg.P &= 0b11111110
@@ -216,10 +216,10 @@ func fetchPC() byte {
    | Addressing mode     | Abbreviation |
    |---------------------+--------------|
    | zeroPage            | ZERO         |
-   | relative            |              |
-   | implied             |              |
+   | relative            | REL          |
+   | implied             | IMPL         |
    | absolute            | ABS          |
-   | accumulator         |              |
+   | accumulator         | ACCUM        |
    | immediate           | IMM          |
    | zeroPageX           | ZEROX        |
    | zeroPageY           | ZEROY        |
@@ -234,43 +234,63 @@ func getOperand(mode string) uint16 {
 	var operand uint16
 	var tmp uint16
 	switch mode {
+	case "IMPL", "ACCUM":
+
 	case "IMM":
 		operand = uint16(fetchPC())
 		reg.PC++
+
 	case "ZERO":
 		operand = uint16(fetchPC() & 0xFF)
 		reg.PC++
+
 	case "ZEROX":
 		operand = uint16((fetchPC() + reg.X) & 0xFF)
 		reg.PC++
+
 	case "ZEROY":
 		operand = uint16((fetchPC() + reg.Y) & 0xFF)
 		reg.PC++
+
 	case "ABS":
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = tmp + uint16(fetchPC())<<0x8
 		reg.PC++
+
 	case "ABSX":
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.X)
 		reg.PC++
+
 	case "ABSY":
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.Y)
 		reg.PC++
+
+	case "REL":
+		tmp = uint16(fetchPC())
+		reg.PC++
+		if (tmp >> 7 & 1) == 1 {
+			operand = uint16(reg.PC - (^tmp+0b1)&0xFF)
+		} else {
+			operand = uint16(reg.PC + tmp)
+		}
+
 	case "INDX":
 		tmp = uint16((fetchPC() + reg.X) & 0xFF)
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8)
 		reg.PC++
+
 	case "INDY":
 		tmp = uint16((fetchPC() + reg.Y) & 0xFF)
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8)
 		reg.PC++
+
 	case "INDABS":
 		tmp = uint16(fetchPC())
 		reg.PC++
@@ -278,7 +298,9 @@ func getOperand(mode string) uint16 {
 		reg.PC++
 		operand = (uint16(CPU_MEM[tmp])&0xFF + uint16(fetchPC())<<0x8)
 		reg.PC++
+
 	default:
+
 	}
 	return operand
 }
@@ -291,7 +313,7 @@ func execOpecode(opecode byte) {
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.A = byte(res)
+		reg.A = byte(operand)
 
 	case "LDX":
 		res = uint(operand)
@@ -439,6 +461,7 @@ func execOpecode(opecode byte) {
 	}
 
 	fmt.Printf("NUM:%x\tOP:%s\tMODE:%s\tOPERAND:%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
+	fmt.Printf("A:%x\tX:%x\tY:%x\tZERO:%v\t\n\n", reg.A, reg.X, reg.Y, getStatus("zero"))
 }
 
 // Init CPU
@@ -461,7 +484,7 @@ func Exec(path string) {
 	initCpu()
 
 	// Execute ROM
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 200; i++ {
 		opecode := fetchPC()
 		reg.PC++
 
