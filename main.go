@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"emu/cpu"
 )
 
 // Global
 
 /*
-   memory map
+   CPU memory map
    Address range	Size	Device
    $0000-$07FF	$0800	2KB internal RAM
    $0800-$0FFF	$0800	Mirrors of $0000-$07FF
@@ -18,8 +20,7 @@ import (
    $2000-$2007	$0008	NES PPU registers
    $2008-$3FFF	$1FF8	Mirrors of $2000-2007 (repeats every 8 bytes)
    $4000-$4017	$0018	NES APU and I/O registers
-   $4018-$401F	$0008	APU and I/O functionality that is normally disabled. See
-   CPU Test Mode.
+   $4018-$401F	$0008	APU and I/O functionality that is normally disabled
    $4020-$FFFF	$BFE0	Cartridge space: PRG ROM, PRG RAM, and mapper registers
    $6000-$7FFF = Battery Backed Save or Work RAM
    $8000-$FFFF = Usual ROM, commonly with Mapper Registers (see MMC1 and UxROM for example)
@@ -28,14 +29,26 @@ import (
    $FFFE-$FFFF = IRQ/BRK vector
 */
 var CPU_MEM [0xFFFF]byte
-var PPU_MEM [0xFFFF]byte
-
 var PRG_ROM_ADDR int = 0x8000
-var CHR_ROM_ADDR int
 
-func main() {
+/*
+   PPU memory map                              // hardware map
+   $0000-$0FFF	$1000	Pattern table 0        // mapped to CHR ROM
+   $1000-$1FFF	$1000	Pattern table 1        //
+   $2000-$23FF	$0400	Nametable 0            // mapped to the 2kB NES internal VRAM,
+   $2400-$27FF	$0400	Nametable 1            //
+   $2800-$2BFF	$0400	Nametable 2            //
+   $2C00-$2FFF	$0400	Nametable 3            //
+   $3000-$3EFF	$0F00	Mirrors of $2000-$2EFF // a mirror of the 2kB region
+   $3F00-$3F1F	$0020	Palette RAM indexes    // mapped to the internal palette control
+   $3F20-$3FFF	$00E0	Mirrors of $3F00-$3F1F //
+
+*/
+var PPU_MEM [0x3FFF]byte
+var CHR_ROM_ADDR int = 0x0000
+
+func romreader(path string) {
 	// Read ROM
-	path := "./ROM/sample1.nes"
 	f, err := os.Open(path)
 
 	if err != nil {
@@ -51,10 +64,9 @@ func main() {
 	   PRG ROM data (16384 * x bytes)
 	   CHR ROM data, if present (8192 * y bytes)
 	*/
-
 	HEADER_SIZE := 0x0010
 	PRG_ROM_SIZE := 0x4000
-	// CHR_ROM_SIZE := 0x2000
+	CHR_ROM_SIZE := 0x2000
 
 	/*
 	   Header
@@ -68,16 +80,26 @@ func main() {
 	   10:    Flags 10 - TV system, PRG-RAM presence (unofficial, rarely used extension)
 	   11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15)
 	*/
-
 	PRG_ROM_PAGES := int(rom[4])
-	// CHR_ROM_PAGES := int(rom[5])
-	// CHR_ROM_START := HEADER_SIZE + PRG_ROM_PAGES*PRG_ROM_SIZE
+	CHR_ROM_PAGES := int(rom[5])
+	CHR_ROM_START := HEADER_SIZE + PRG_ROM_PAGES*PRG_ROM_SIZE
 
 	prg_rom := rom[HEADER_SIZE : HEADER_SIZE+PRG_ROM_PAGES*PRG_ROM_SIZE]
-	// chr_rom := rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
+	chr_rom := rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
 
 	copy(CPU_MEM[PRG_ROM_ADDR:], prg_rom[:])
-	// copy(CPU_MEM[CHR_ROM_ADDR:], chr_rom[:])
-	fmt.Println(prg_rom, CPU_MEM[PRG_ROM_ADDR:])
+	copy(PPU_MEM[CHR_ROM_ADDR:], chr_rom[:])
+
+}
+
+func main() {
+	// Read ROM
+	path := "./ROM/sample1.nes"
+	romreader(path)
+
+	fmt.Print(CPU_MEM)
+	fmt.Print(PPU_MEM)
+
+	cpu.Cpu()
 
 }
