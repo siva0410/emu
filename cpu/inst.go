@@ -1,9 +1,5 @@
 package cpu
 
-import (
-	"fmt"
-)
-
 var cycle_list = [0x100]int{
 	/*0x00*/ 7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,
 	/*0x10*/ 2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 6, 7,
@@ -231,10 +227,4 @@ func setInstList() {
 	inst_arr[0xD0] = InstList{"BNE", "", cycle_list[0xD0]}
 	inst_arr[0xF0] = InstList{"BEQ", "", cycle_list[0xF0]}
 
-}
-
-func test() {
-	initInstList()
-	setInstList()
-	fmt.Println(inst_arr)
 }

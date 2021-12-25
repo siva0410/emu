@@ -53,7 +53,7 @@ type Register struct {
 	A  byte
 	X  byte
 	Y  byte
-	SP uint16
+	S  byte
 	PC uint16
 	P  byte
 }
@@ -66,7 +66,7 @@ func initRegister() *Register {
 	init_reg.A = 0x00
 	init_reg.X = 0x00
 	init_reg.Y = 0x00
-	init_reg.SP = 0x01FD
+	init_reg.S = 0x00
 	init_reg.PC = 0x0000
 
 	return init_reg
@@ -89,10 +89,121 @@ func resetRegister() *Register {
 	reset_reg.A = 0x00
 	reset_reg.X = 0x00
 	reset_reg.Y = 0x00
-	reset_reg.SP = 0x01FD
+	reset_reg.S = 0x00
 	reset_reg.PC = reset_point
 
 	return reset_reg
+}
+
+/*
+   7654 3210
+   ---- ----
+   NVss DIZC
+   |||| ||||
+   |||| |||+- Carry
+   |||| ||+-- Zero
+   |||| |+--- Interrupt Disable
+   |||| +---- Decimal
+   ||++------ No CPU effect, see: the B flag
+   |+-------- Overflow
+   +--------- Negative
+*/
+func setStatus(flagname string, status bool) {
+	if !status {
+		// status = false
+		switch flagname {
+		case "carry":
+			reg.P |= 0b00000001
+		case "zero":
+			reg.P |= 0b00000010
+		case "interrupt_disable":
+			reg.P |= 0b00000100
+		case "decimal":
+			reg.P |= 0b00001000
+		case "b_flag1":
+			reg.P |= 0b00010000
+		case "b_flag2":
+			reg.P |= 0b00100000
+		case "overflow":
+			reg.P |= 0b01000000
+		case "negative":
+			reg.P |= 0b10000000
+		}
+	} else {
+		// staus = true
+		switch flagname {
+		case "carry":
+			reg.P &= 0b11111110
+		case "zero":
+			reg.P &= 0b11111101
+		case "interrupt_disable":
+			reg.P &= 0b11111011
+		case "decimal":
+			reg.P &= 0b11110111
+		case "b_flag1":
+			reg.P &= 0b11101111
+		case "b_flag2":
+			reg.P &= 0b11011111
+		case "overflow":
+			reg.P &= 0b10111111
+		case "negative":
+			reg.P &= 0b01111111
+		}
+	}
+
+}
+
+func getStatus(flagname string) bool {
+	var status byte
+	switch flagname {
+	case "carry":
+		status = reg.P >> 0 & 0b1
+	case "zero":
+		status = reg.P >> 1 & 0b1
+	case "interrupt_disable":
+		status = reg.P >> 2 & 0b1
+	case "decimal":
+		status = reg.P >> 3 & 0b1
+	case "b_flag1":
+		status = reg.P >> 4 & 0b1
+	case "b_flag2":
+		status = reg.P >> 5 & 0b1
+	case "overflow":
+		status = reg.P >> 6 & 0b1
+	case "negative":
+		status = reg.P >> 7 & 0b1
+	}
+
+	var res bool = false
+	if status == 1 {
+		res = true
+	}
+
+	return res
+}
+
+func setZeroFlag(num uint) {
+	if num == 0 {
+		setStatus("zero", true)
+	} else {
+		setStatus("zero", false)
+	}
+}
+
+// func setCarryFlag(num uint) {
+// 	if num>>7 == 1 {
+// 		setStatus("negative", true)
+// 	} else {
+// 		setStatus("negative", false)
+// 	}
+// }
+
+func setNegativeFlag(num uint) {
+	if num>>7 == 1 {
+		setStatus("negative", true)
+	} else {
+		setStatus("negative", false)
+	}
 }
 
 // Fetch inst by PC
@@ -172,21 +283,189 @@ func getOperand(mode string) uint16 {
 	return operand
 }
 
-// Execute loaded ROM
-func Exec(path string) {
-	loadRom(path)
-	// Init and reset register
+func execOpecode(opecode byte) {
+	operand := getOperand(inst_arr[opecode].mode)
+	var res uint
+	switch inst_arr[opecode].name {
+	case "LDA":
+		res = uint(operand)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.A = byte(res)
+
+	case "LDX":
+		res = uint(operand)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.X = byte(operand)
+
+	case "LDY":
+		res = uint(operand)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.Y = byte(operand)
+
+	case "STA":
+		CPU_MEM[operand] = reg.A
+
+	case "STX":
+		CPU_MEM[operand] = reg.X
+
+	case "STY":
+		CPU_MEM[operand] = reg.Y
+
+	case "TAX":
+		res = uint(reg.A)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.X = reg.A
+
+	case "TAY":
+		res = uint(reg.A)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.Y = reg.A
+
+	case "TXA":
+		res = uint(reg.X)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.A = reg.X
+
+	case "TYA":
+		res = uint(reg.Y)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.A = reg.Y
+
+	case "TXS":
+		res = uint(reg.X)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.S = reg.X
+
+	case "TSX":
+		res = uint(reg.S)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+		reg.X = reg.S
+
+	// case "PHP":
+	// case "PLP":
+	// case "PHA":
+	// case "PLA":
+	// case "ADC":
+	// 	reg.A = reg.A + CPU_MEM[operand] + getStatus("carry")
+	// case "SBC":
+	// case "CPX":
+	// case "CPY":
+	// case "CMP":
+	// case "AND":
+	// 	reg.A = reg.A & CPU_MEM[operand]
+	// case "EOR":
+	// case "ORA":
+	// case "BIT":
+	// case "ASL":
+	// case "LSR":
+	// case "ROL":
+	// case "ROR":
+	case "INX":
+		reg.X++
+		res = uint(reg.X)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "INY":
+		reg.Y++
+		res = uint(reg.Y)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "INC":
+		CPU_MEM[operand]++
+		res = uint(CPU_MEM[operand])
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "DEX":
+		reg.X--
+		res = uint(reg.X)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "DEY":
+		reg.Y--
+		res = uint(reg.Y)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "DEC":
+		CPU_MEM[operand]--
+		res = uint(CPU_MEM[operand])
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	// case "CLC":
+	// case "CLI":
+	// case "CLV":
+	// case "CLD":
+	// case "SEC":
+	case "SEI":
+		setStatus("interrupt_disable", false)
+	// case "SED":
+	// case "NOP":
+	case "BRK":
+		if !getStatus("interrupt_disable") {
+			// interrupt handler
+		}
+	// case "JSR":
+	case "JMP":
+		reg.PC = operand
+	// case "RTI":
+	// case "RTS":
+	// case "BPL":
+	// case "BMI":
+	// case "BVC":
+	// case "BVS":
+	// case "BCC":
+	// case "BCS":
+	case "BNE":
+		if !getStatus("zero") {
+			reg.PC = operand
+		}
+	// case "BEQ":
+	default:
+		fmt.Println("NOT IMPL INST:", inst_arr[opecode].name, operand)
+	}
+
+	fmt.Printf("NUM:%x\tOP:%s\tMODE:%s\tOPERAND:%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
+}
+
+// Init CPU
+func initCpu() {
+	// init register
 	reg = initRegister()
 	reg = resetRegister()
 
-	test()
+	// init inst list
+	initInstList()
+	setInstList()
+}
 
-	var opcode byte
-	for i := 0; i < 150; i++ {
-		opcode = fetchPC()
+// Execute loaded ROM
+func Exec(path string) {
+	// Load ROM
+	loadRom(path)
+
+	// Init
+	initCpu()
+
+	// Execute ROM
+	for i := 0; i < 100; i++ {
+		opecode := fetchPC()
 		reg.PC++
 
-		fmt.Printf("NUM:%x\tOP:%s\tMODE:%s\tOPERAND:%x\n", opcode, inst_arr[opcode].name, inst_arr[opcode].mode, getOperand(inst_arr[opcode].mode))
+		execOpecode(opecode)
 
 	}
 }
