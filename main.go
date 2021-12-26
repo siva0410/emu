@@ -2,14 +2,16 @@ package main
 
 import (
 	"emu/cpu"
-	"emu/ppu"
+	"emu/romloader"
 )
 
 func main() {
 	// Read ROM
 	path := "./ROM/sample1.nes"
 
-	cpu.Exec(path)
-	ppu.PpuTest()
+	// Load ROM
+	romloader.LoadRom(path)
 
+	cpu.Exec()
+	// ppu.PpuTest()
 }

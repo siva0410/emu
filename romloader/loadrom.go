@@ -1,4 +1,4 @@
-package cpu
+package romloader
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 // Read ROM and load to CPU/PPU memory
-func loadRom(path string) {
+func LoadRom(path string) {
 	f, err := os.Open(path)
 
 	if err != nil {

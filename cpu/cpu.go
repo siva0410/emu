@@ -434,10 +434,7 @@ func initCpu() {
 }
 
 // Execute loaded ROM
-func Exec(path string) {
-	// Load ROM
-	loadRom(path)
-
+func Exec() {
 	// Init
 	initCpu()
 
