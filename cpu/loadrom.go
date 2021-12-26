@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"emu/bus"
 )
 
 // Read ROM and load to CPU/PPU memory
@@ -46,6 +48,6 @@ func loadRom(path string) {
 	prg_rom := rom[HEADER_SIZE : HEADER_SIZE+PRG_ROM_PAGES*PRG_ROM_SIZE]
 	chr_rom := rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
 
-	copy(CPU_MEM[PRG_ROM_ADDR:], prg_rom[:])
-	copy(PPU_MEM[CHR_ROM_ADDR:], chr_rom[:])
+	copy(bus.CPU_MEM[bus.PRG_ROM_ADDR:], prg_rom[:])
+	copy(bus.PPU_MEM[bus.CHR_ROM_ADDR:], chr_rom[:])
 }

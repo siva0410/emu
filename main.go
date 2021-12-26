@@ -2,6 +2,7 @@ package main
 
 import (
 	"emu/cpu"
+	"emu/ppu"
 )
 
 func main() {
@@ -9,5 +10,6 @@ func main() {
 	path := "./ROM/sample1.nes"
 
 	cpu.Exec(path)
+	ppu.PpuTest()
 
 }
