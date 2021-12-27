@@ -43,3 +43,4 @@ var PRG_ROM_ADDR uint16 = 0x8000
 */
 var PPU_MEM [0x3FFF]byte
 var CHR_ROM_ADDR uint16 = 0x0000
+var PPU_PTR uint32

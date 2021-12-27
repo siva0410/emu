@@ -42,7 +42,6 @@ func resetRegister() *Register {
 	lower_addr := 0xFFFC
 	upper_addr := 0xFFFD
 	reset_point := uint16(bus.CPU_MEM[lower_addr]) + (uint16(bus.CPU_MEM[upper_addr]) << 0x8)
-	fmt.Printf("%x, %x\n", bus.CPU_MEM[lower_addr], bus.CPU_MEM[upper_addr])
 	reset_reg := new(Register)
 	reset_reg.A = 0x00
 	reset_reg.X = 0x00
@@ -263,6 +262,16 @@ func getOperand(mode string) uint16 {
 	return operand
 }
 
+// func checkPpuPtr(operand uint16){
+// 	if operand == 0x2007{
+// 		if !getPpuCtrl("I") {
+// 			bus.PPU_PTR += 0x1
+// 		} else {
+// 			bus.PPU_PTR += 0x20
+// 		}
+// 	}
+// }
+
 func execOpecode(opecode byte) {
 	operand := getOperand(inst_arr[opecode].mode)
 	var res uint
@@ -418,12 +427,12 @@ func execOpecode(opecode byte) {
 		fmt.Println("NOT IMPL INST:", inst_arr[opecode].name, operand)
 	}
 
-	fmt.Printf("NUM:%x\tOP:%s\tMODE:%s\tOPERAND:%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
-	fmt.Printf("A:%x\tX:%x\tY:%x\tZERO:%v\t\n\n", reg.A, reg.X, reg.Y, getStatus("zero"))
+	fmt.Printf("NUM:0x%x\tOP:%s\tMODE:%s\tOPERAND:0x%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
+	fmt.Printf("A:0x%x\tX:0x%x\tY:0x%x\tZERO:%v\t\n", reg.A, reg.X, reg.Y, getStatus("zero"))
 }
 
 // Init CPU
-func initCpu() {
+func InitCpu() {
 	// init register
 	reg = initRegister()
 	reg = resetRegister()
@@ -434,16 +443,10 @@ func initCpu() {
 }
 
 // Execute loaded ROM
-func Exec() {
-	// Init
-	initCpu()
-
+func ExecCpu() {
 	// Execute ROM
-	for i := 0; i < 200; i++ {
-		opecode := fetchPC()
-		reg.PC++
+	opecode := fetchPC()
+	reg.PC++
 
-		execOpecode(opecode)
-
-	}
+	execOpecode(opecode)
 }
