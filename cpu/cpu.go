@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"emu/bus"
+	"emu/ppu"
 )
 
 /*
@@ -57,12 +58,14 @@ func getOperand(mode string) uint16 {
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.X)
+		operand = uint16(bus.CPU_MEM[operand])
 		reg.PC++
 
 	case "ABSY":
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.Y)
+		operand = uint16(bus.CPU_MEM[operand])
 		reg.PC++
 
 	case "REL":
@@ -106,42 +109,42 @@ func execOpecode(opecode byte) {
 	switch inst_arr[opecode].name {
 	case "LDA":
 		res = uint(operand)
-		// check ppu_addr register
-		bus.CheckPpuPtr(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
 		reg.A = byte(operand)
+		// check ppu_addr register
+		ppu.CheckPpuPtr(operand)
 
 	case "LDX":
 		res = uint(operand)
-		// check ppu_addr register
-		bus.CheckPpuPtr(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
 		reg.X = byte(operand)
+		// check ppu_addr register
+		ppu.CheckPpuPtr(operand)
 
 	case "LDY":
 		res = uint(operand)
-		// check ppu_addr register
-		bus.CheckPpuPtr(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
 		reg.Y = byte(operand)
+		// check ppu_addr register
+		ppu.CheckPpuPtr(operand)
 
 	case "STA":
-		// check ppu_addr register
-		bus.CheckPpuPtr(operand)
 		bus.CPU_MEM[operand] = reg.A
+		// check ppu_addr register
+		ppu.CheckPpuPtr(operand)
 
 	case "STX":
-		// check ppu_addr register
-		bus.CheckPpuPtr(operand)
 		bus.CPU_MEM[operand] = reg.X
+		// check ppu_addr register
+		ppu.CheckPpuPtr(operand)
 
 	case "STY":
-		// check ppu_addr register
-		bus.CheckPpuPtr(operand)
 		bus.CPU_MEM[operand] = reg.Y
+		// check ppu_addr register
+		ppu.CheckPpuPtr(operand)
 
 	case "TAX":
 		res = uint(reg.A)
@@ -269,6 +272,15 @@ func execOpecode(opecode byte) {
 
 	fmt.Printf("NUM:0x%x\tOP:%s\tMODE:%s\tOPERAND:0x%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
 	fmt.Printf("A:0x%x\tX:0x%x\tY:0x%x\tZERO:%v\t\n", reg.A, reg.X, reg.Y, getStatus("zero"))
+	// check ppu register
+	fmt.Printf("ppuctrl:%x\t", ppu.Ppu_reg.Ppuctrl)
+	fmt.Printf("ppustatus:%x\t", ppu.Ppu_reg.Ppustatus)
+	fmt.Printf("oamaddr:%x\t\n", ppu.Ppu_reg.Oamaddr)
+	fmt.Printf("oamdata:%x\t", ppu.Ppu_reg.Oamdata)
+	fmt.Printf("ppuaddr:%x\t", ppu.Ppu_reg.Ppuaddr)
+	fmt.Printf("ppudata:%x\t\n", ppu.Ppu_reg.Ppudata)
+	fmt.Printf("MEM ppuaddr:%x\n\n", ppu.PPU_PTR)
+
 }
 
 // Init CPU
