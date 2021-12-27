@@ -82,9 +82,9 @@ func getOperand(mode string) uint16 {
 		reg.PC++
 
 	case "INDY":
-		tmp = uint16((fetchPC() + reg.Y) & 0xFF)
+		tmp = uint16(fetchPC())
 		reg.PC++
-		operand = (tmp + uint16(fetchPC())<<0x8)
+		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.Y)
 		reg.PC++
 
 	case "INDABS":
@@ -92,7 +92,7 @@ func getOperand(mode string) uint16 {
 		reg.PC++
 		tmp = tmp + uint16(fetchPC())<<0x8
 		reg.PC++
-		operand = (uint16(bus.CPU_MEM[tmp])&0xFF + uint16(fetchPC())<<0x8)
+		operand = (uint16(bus.CPU_MEM[tmp]) + uint16(fetchPC())<<0x8)
 		reg.PC++
 
 	default:
