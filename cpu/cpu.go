@@ -262,45 +262,47 @@ func getOperand(mode string) uint16 {
 	return operand
 }
 
-// func checkPpuPtr(operand uint16){
-// 	if operand == 0x2007{
-// 		if !getPpuCtrl("I") {
-// 			bus.PPU_PTR += 0x1
-// 		} else {
-// 			bus.PPU_PTR += 0x20
-// 		}
-// 	}
-// }
-
 func execOpecode(opecode byte) {
 	operand := getOperand(inst_arr[opecode].mode)
 	var res uint
 	switch inst_arr[opecode].name {
 	case "LDA":
 		res = uint(operand)
+		// check ppu_addr register
+		bus.CheckPpuPtr(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
 		reg.A = byte(operand)
 
 	case "LDX":
 		res = uint(operand)
+		// check ppu_addr register
+		bus.CheckPpuPtr(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
 		reg.X = byte(operand)
 
 	case "LDY":
 		res = uint(operand)
+		// check ppu_addr register
+		bus.CheckPpuPtr(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
 		reg.Y = byte(operand)
 
 	case "STA":
+		// check ppu_addr register
+		bus.CheckPpuPtr(operand)
 		bus.CPU_MEM[operand] = reg.A
 
 	case "STX":
+		// check ppu_addr register
+		bus.CheckPpuPtr(operand)
 		bus.CPU_MEM[operand] = reg.X
 
 	case "STY":
+		// check ppu_addr register
+		bus.CheckPpuPtr(operand)
 		bus.CPU_MEM[operand] = reg.Y
 
 	case "TAX":

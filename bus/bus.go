@@ -168,3 +168,13 @@ func GetPpuMask(flagname string) bool {
    | read resets write pair for %2005/%2006  |   4 |
    |-----------------------------------------+-----|
 */
+
+func CheckPpuPtr(operand uint16) {
+	if operand == 0x2007 {
+		if !GetPpuCtrl("I") {
+			PPU_PTR += 0x1
+		} else {
+			PPU_PTR += 0x20
+		}
+	}
+}
