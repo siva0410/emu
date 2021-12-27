@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"emu/bus"
+	"emu/ppu"
 )
 
 // Read ROM and load to CPU/PPU memory
@@ -49,5 +50,5 @@ func LoadRom(path string) {
 	chr_rom := rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
 
 	copy(bus.CPU_MEM[bus.PRG_ROM_ADDR:], prg_rom[:])
-	copy(bus.PPU_MEM[bus.CHR_ROM_ADDR:], chr_rom[:])
+	copy(ppu.PPU_MEM[bus.CHR_ROM_ADDR:], chr_rom[:])
 }

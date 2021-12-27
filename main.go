@@ -28,4 +28,5 @@ func main() {
 			ppu.ExecPpu()
 		}
 	}
+	fmt.Println(ppu.PPU_MEM)
 }
