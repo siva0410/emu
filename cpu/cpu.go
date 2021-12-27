@@ -33,7 +33,7 @@ func getOperand(mode string) uint16 {
 	case "IMPL", "ACCUM":
 
 	case "IMM":
-		operand = uint16(fetchPC())
+		operand = reg.PC
 		reg.PC++
 
 	case "ZERO":
@@ -58,14 +58,12 @@ func getOperand(mode string) uint16 {
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.X)
-		operand = uint16(bus.CPU_MEM[operand])
 		reg.PC++
 
 	case "ABSY":
 		tmp = uint16(fetchPC())
 		reg.PC++
 		operand = (tmp + uint16(fetchPC())<<0x8) + uint16(reg.Y)
-		operand = uint16(bus.CPU_MEM[operand])
 		reg.PC++
 
 	case "REL":
@@ -111,7 +109,7 @@ func execOpecode(opecode byte) {
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.A = byte(operand)
+		reg.A = bus.CPU_MEM[operand]
 		// check ppu_addr register
 		ppu.CheckPpuPtr(operand)
 
@@ -119,7 +117,7 @@ func execOpecode(opecode byte) {
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.X = byte(operand)
+		reg.X = bus.CPU_MEM[operand]
 		// check ppu_addr register
 		ppu.CheckPpuPtr(operand)
 
@@ -127,7 +125,7 @@ func execOpecode(opecode byte) {
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.Y = byte(operand)
+		reg.Y = bus.CPU_MEM[operand]
 		// check ppu_addr register
 		ppu.CheckPpuPtr(operand)
 
