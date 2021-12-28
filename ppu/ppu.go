@@ -20,8 +20,9 @@ import (
    | $3F20-$3FFF   | $00E0 | Mirrors of $3F00-$3F1F |                                        |
    |---------------+-------+------------------------+----------------------------------------|
 */
-var PPU_MEM [0x3FFF]byte
+var PPU_MEM [0x4000]byte
 var PPU_PTR uint32
+var PPU_MEM_CHK [0x4000]bool
 
 /*
    |-------------+---------+-----------+------------------------------------------------------------------|
@@ -39,17 +40,29 @@ var PPU_PTR uint32
    |-------------+---------+-----------+------------------------------------------------------------------|
 */
 type PpuRegister struct {
-	Ppuctrl   byte // mode:W
-	Ppumask   byte // mode:W
-	Ppustatus byte // mode:R
-	Oamaddr   byte // mode:W
-	Oamdata   byte // mode:R/W
-	Ppuscroll byte // mode:W
-	Ppuaddr   byte // mode:W
-	Ppudata   byte // mode:R/W
+	Ppuctrl   *byte // mode:W
+	Ppumask   *byte // mode:W
+	Ppustatus *byte // mode:R
+	Oamaddr   *byte // mode:W
+	Oamdata   *byte // mode:R/W
+	Ppuscroll *byte // mode:W
+	Ppuaddr   *byte // mode:W
+	Ppudata   *byte // mode:R/W
 }
 
-var Ppu_reg, Before_ppu_reg *PpuRegister
+var Ppu_reg *PpuRegister
+
+// Init Ppu register
+func initPpuRegisters(reg *PpuRegister) {
+	reg.Ppuctrl = &bus.CPU_MEM[0x2000]
+	reg.Ppumask = &bus.CPU_MEM[0x2001]
+	reg.Ppustatus = &bus.CPU_MEM[0x2002]
+	reg.Oamaddr = &bus.CPU_MEM[0x2003]
+	reg.Oamdata = &bus.CPU_MEM[0x2004]
+	reg.Ppuscroll = &bus.CPU_MEM[0x2005]
+	reg.Ppuaddr = &bus.CPU_MEM[0x2006]
+	reg.Ppudata = &bus.CPU_MEM[0x2007]
+}
 
 /*
    |----------------------------+-----|
@@ -68,21 +81,21 @@ func GetPpuCtrl(flagname string) bool {
 	var status byte
 	switch flagname {
 	case "NM1":
-		status = Ppu_reg.Ppuctrl >> 0 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 0 & 0b1
 	case "NM2":
-		status = Ppu_reg.Ppuctrl >> 1 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 1 & 0b1
 	case "I":
-		status = Ppu_reg.Ppuctrl >> 2 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 2 & 0b1
 	case "S":
-		status = Ppu_reg.Ppuctrl >> 3 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 3 & 0b1
 	case "B":
-		status = Ppu_reg.Ppuctrl >> 4 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 4 & 0b1
 	case "H":
-		status = Ppu_reg.Ppuctrl >> 5 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 5 & 0b1
 	case "P":
-		status = Ppu_reg.Ppuctrl >> 6 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 6 & 0b1
 	case "V":
-		status = Ppu_reg.Ppuctrl >> 7 & 0b1
+		status = *Ppu_reg.Ppuctrl >> 7 & 0b1
 	}
 
 	var res bool = false
@@ -111,21 +124,21 @@ func GetPpuMask(flagname string) bool {
 	var status byte
 	switch flagname {
 	case "G":
-		status = Ppu_reg.Ppumask >> 0 & 0b1
+		status = *Ppu_reg.Ppumask >> 0 & 0b1
 	case "m":
-		status = Ppu_reg.Ppumask >> 1 & 0b1
+		status = *Ppu_reg.Ppumask >> 1 & 0b1
 	case "M":
-		status = Ppu_reg.Ppumask >> 2 & 0b1
+		status = *Ppu_reg.Ppumask >> 2 & 0b1
 	case "b":
-		status = Ppu_reg.Ppumask >> 3 & 0b1
+		status = *Ppu_reg.Ppumask >> 3 & 0b1
 	case "s":
-		status = Ppu_reg.Ppumask >> 4 & 0b1
+		status = *Ppu_reg.Ppumask >> 4 & 0b1
 	case "RGB_B":
-		status = Ppu_reg.Ppumask >> 5 & 0b1
+		status = *Ppu_reg.Ppumask >> 5 & 0b1
 	case "RGB_G":
-		status = Ppu_reg.Ppumask >> 6 & 0b1
+		status = *Ppu_reg.Ppumask >> 6 & 0b1
 	case "RGB_R":
-		status = Ppu_reg.Ppumask >> 7 & 0b1
+		status = *Ppu_reg.Ppumask >> 7 & 0b1
 	}
 
 	var res bool = false
@@ -149,42 +162,17 @@ func GetPpuMask(flagname string) bool {
 
 var ppu_addr_flag bool = false
 
-func fetchPpuRegisters(reg *PpuRegister) {
-	reg.Ppuctrl = bus.CPU_MEM[0x2000]
-	reg.Ppumask = bus.CPU_MEM[0x2001]
-	reg.Ppustatus = bus.CPU_MEM[0x2002]
-	reg.Oamaddr = bus.CPU_MEM[0x2003]
-	reg.Oamdata = bus.CPU_MEM[0x2004]
-	reg.Ppuscroll = bus.CPU_MEM[0x2005]
-	reg.Ppuaddr = bus.CPU_MEM[0x2006]
-	reg.Ppudata = bus.CPU_MEM[0x2007]
-}
-
-func copyPpuRegisters(before_reg, reg *PpuRegister) {
-	before_reg.Ppuctrl = reg.Ppuctrl
-	before_reg.Ppumask = reg.Ppumask
-	before_reg.Ppustatus = reg.Ppustatus
-	before_reg.Oamaddr = reg.Oamaddr
-	before_reg.Oamdata = reg.Oamdata
-	before_reg.Ppuscroll = reg.Ppuscroll
-	before_reg.Ppuaddr = reg.Ppuaddr
-	before_reg.Ppudata = reg.Ppudata
-}
-
 func InitPpu() {
 	Ppu_reg = new(PpuRegister)
-	Before_ppu_reg = new(PpuRegister)
-	fetchPpuRegisters(Ppu_reg)
-	fetchPpuRegisters(Before_ppu_reg)
+	initPpuRegisters(Ppu_reg)
 }
 
 func CheckPpuPtr(operand uint16) {
-	// Fetch PPU regs from CPU_MEM
-	fetchPpuRegisters(Ppu_reg)
-
 	switch operand {
 	case 0x2007:
-		PPU_MEM[PPU_PTR] = Ppu_reg.Ppudata
+		PPU_MEM[PPU_PTR] = *Ppu_reg.Ppudata
+		// check ppu_mem_chk
+		PPU_MEM_CHK[PPU_PTR] = true
 		if !GetPpuCtrl("I") {
 			PPU_PTR += 0x1
 		} else {
@@ -193,7 +181,7 @@ func CheckPpuPtr(operand uint16) {
 
 	case 0x2006:
 		PPU_PTR = PPU_PTR << 0x8
-		PPU_PTR += uint32(Ppu_reg.Ppuaddr)
+		PPU_PTR += uint32(*Ppu_reg.Ppuaddr)
 		PPU_PTR &= 0xFFFF
 		if ppu_addr_flag {
 			ppu_addr_flag = false
@@ -206,25 +194,37 @@ func CheckPpuPtr(operand uint16) {
 	}
 }
 
-func ExecPpu() {
+func ExecPpu(cycle *int) {
+	// Set sprite
+	line := 0
+	if *cycle >= 341 {
+		// set sprites
+		*cycle -= 341
+		line++
+	}
+
+	if line%8 == 0 && line <= 240 {
+		// set palette
+	}
+
 	// fetchPpuRegisters(Ppu_reg)
-	// if Before_ppu_reg.Ppuaddr != Ppu_reg.Ppuaddr {
+	// if Before_ppu_reg.Ppuaddr != *Ppu_reg.Ppuaddr {
 	// 	PPU_PTR = PPU_PTR << 0x8
-	// 	PPU_PTR += uint32(Ppu_reg.Ppuaddr)
+	// 	PPU_PTR += uint32(*Ppu_reg.Ppuaddr)
 	// 	PPU_PTR &= 0xFFFF
 	// }
-	// PPU_MEM[PPU_PTR] = Ppu_reg.Ppudata
+	// PPU_MEM[PPU_PTR] = *Ppu_reg.Ppudata
 
 	// // backup ppu_reg to before_ppu_reg
 	// copyPpuRegisters(Before_ppu_reg, Ppu_reg)
 
 	// // check ppu register
-	// fmt.Printf("ppuctrl:%x\t", Ppu_reg.Ppuctrl)
-	// fmt.Printf("ppustatus:%x\t", Ppu_reg.Ppustatus)
-	// fmt.Printf("oamaddr:%x\t\n", Ppu_reg.Oamaddr)
-	// fmt.Printf("oamdata:%x\t", Ppu_reg.Oamdata)
-	// fmt.Printf("ppuaddr:%x\t", Ppu_reg.Ppuaddr)
-	// fmt.Printf("ppudata:%x\t\n", Ppu_reg.Ppudata)
+	// fmt.Printf("ppuctrl:%x\t", *Ppu_reg.Ppuctrl)
+	// fmt.Printf("ppustatus:%x\t", *Ppu_reg.Ppustatus)
+	// fmt.Printf("oamaddr:%x\t\n", *Ppu_reg.Oamaddr)
+	// fmt.Printf("oamdata:%x\t", *Ppu_reg.Oamdata)
+	// fmt.Printf("ppuaddr:%x\t", *Ppu_reg.Ppuaddr)
+	// fmt.Printf("ppudata:%x\t\n", *Ppu_reg.Ppudata)
 	// fmt.Printf("MEM ppuaddr:%x\n\n", PPU_PTR)
 
 	// fmt.Printf("before_ppuctrl:%x\t", Before_ppu_reg.Ppuctrl)

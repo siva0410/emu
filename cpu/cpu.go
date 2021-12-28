@@ -101,7 +101,7 @@ func getOperand(mode string) uint16 {
 	return operand
 }
 
-func execOpecode(opecode byte) {
+func execOpecode(opecode byte) int {
 	operand := getOperand(inst_arr[opecode].mode)
 	var res uint
 	switch inst_arr[opecode].name {
@@ -279,6 +279,7 @@ func execOpecode(opecode byte) {
 	fmt.Printf("ppudata:%x\t\n", ppu.Ppu_reg.Ppudata)
 	fmt.Printf("MEM ppuaddr:%x\n\n", ppu.PPU_PTR)
 
+	return inst_arr[opecode].cycle
 }
 
 // Init CPU
@@ -293,10 +294,10 @@ func InitCpu() {
 }
 
 // Execute loaded ROM
-func ExecCpu() {
+func ExecCpu(cycle *int) {
 	// Execute ROM
 	opecode := fetchPC()
 	reg.PC++
 
-	execOpecode(opecode)
+	*cycle += execOpecode(opecode)
 }
