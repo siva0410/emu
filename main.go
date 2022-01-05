@@ -4,6 +4,7 @@ import (
 	"emu/cpu"
 	"emu/ppu"
 	"emu/romloader"
+	"emu/window"
 	"fmt"
 )
 
@@ -67,7 +68,7 @@ func main() {
 	ppu.InitPpu()
 
 	// Create window
-	// window.Window()
+	window.Window()
 
 	var cycle *int
 	cycle = new(int)
