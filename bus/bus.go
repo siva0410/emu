@@ -22,6 +22,6 @@ package bus
    |---------------+-------+---------------------------------------------------------|
 
 */
-var CPU_MEM [0xFFFF]byte
+var CPU_MEM [0x10000]byte
 var PRG_ROM_ADDR uint16 = 0x8000
 var CHR_ROM_ADDR uint16 = 0x0000
