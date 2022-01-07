@@ -18,40 +18,26 @@ const (
 	columns = 256
 
 	vertexShaderSource = `
-		#version 410
-		in vec3 vp;
+		#version 460 core
+		layout(location = 0) in vec3 vp;
+                layout(location = 1) in vec3 vc;
+                out vec4 vColor;
+
 		void main() {
 			gl_Position = vec4(vp, 1.0);
+                        vColor = vec4(vc, 1.0);
 		}
 	` + "\x00"
 
 	fragmentShaderSource = `
-		#version 410
-		out vec4 frag_colour;
+		#version 460 core
+                in vec4 vColor;
+		out vec4 frag_color;
 		void main() {
-			frag_colour = vec4(1, 1, 1, 1.0);
+			frag_color = vColor;
 		}
 	` + "\x00"
 )
-
-var (
-	square = []float32{
-		-0.5, 0.5, 0,
-		-0.5, -0.5, 0,
-		0.5, -0.5, 0,
-
-		-0.5, 0.5, 0,
-		0.5, 0.5, 0,
-		0.5, -0.5, 0,
-	}
-)
-
-type dot struct {
-	drawable uint32
-
-	w int
-	h int
-}
 
 func Window() {
 	runtime.LockOSThread()
@@ -64,73 +50,6 @@ func Window() {
 	for !window.ShouldClose() {
 		draw(dots, window, program)
 	}
-}
-
-func draw(dots [][]*dot, window *glfw.Window, program uint32) {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(program)
-
-	// for x := range dots {
-	// 	for _, c := range dots[x] {
-	// 		c.draw()
-	// 	}
-	// }
-	dots[2][3].draw()
-	dots[0][0].draw()
-	dots[rows-1][columns-1].draw()
-
-	glfw.PollEvents()
-	window.SwapBuffers()
-}
-
-func makeDots() [][]*dot {
-	dots := make([][]*dot, rows, rows)
-	for h := 0; h < rows; h++ {
-		for w := 0; w < columns; w++ {
-			c := newDot(h, w)
-			dots[h] = append(dots[h], c)
-		}
-	}
-
-	return dots
-}
-
-func newDot(h, w int) *dot {
-	points := make([]float32, len(square), len(square))
-	copy(points, square)
-
-	for i := 0; i < len(points); i++ {
-		var position float32
-		var size float32
-		switch i % 3 {
-		case 0:
-			size = 1.0 / float32(columns)
-			position = float32(w) * size
-		case 1:
-			size = 1.0 / float32(rows)
-			position = float32(rows-1-h) * size
-		default:
-			continue
-		}
-
-		if points[i] < 0 {
-			points[i] = (position * 2) - 1
-		} else {
-			points[i] = ((position + size) * 2) - 1
-		}
-	}
-
-	return &dot{
-		drawable: makeVao(points),
-
-		h: h,
-		w: w,
-	}
-}
-
-func (c *dot) draw() {
-	gl.BindVertexArray(c.drawable)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
 }
 
 // initGlfw initializes glfw and returns a Window to use.
@@ -176,23 +95,6 @@ func initOpenGL() uint32 {
 	gl.AttachShader(prog, fragmentShader)
 	gl.LinkProgram(prog)
 	return prog
-}
-
-// makeVao initializes and returns a vertex array from the points provided.
-func makeVao(points []float32) uint32 {
-	var vbo uint32
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*len(points), gl.Ptr(points), gl.STATIC_DRAW)
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
-
-	return vao
 }
 
 func compileShader(source string, shaderType uint32) (uint32, error) {
