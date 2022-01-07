@@ -1,6 +1,8 @@
 package window
 
 import (
+	"emu/cpu"
+	"emu/ppu"
 	"fmt"
 	"log"
 	"runtime"
@@ -18,7 +20,7 @@ const (
 	columns = 256
 
 	vertexShaderSource = `
-		#version 460 core
+		#version 410 core
 		layout(location = 0) in vec3 vp;
                 layout(location = 1) in vec3 vc;
                 out vec4 vColor;
@@ -30,7 +32,7 @@ const (
 	` + "\x00"
 
 	fragmentShaderSource = `
-		#version 460 core
+		#version 410 core
                 in vec4 vColor;
 		out vec4 frag_color;
 		void main() {
@@ -47,8 +49,38 @@ func Window() {
 	program := initOpenGL()
 
 	dots := makeDots()
+
+	var cycle *int
+	cycle = new(int)
+	i := 0
 	for !window.ShouldClose() {
-		draw(dots, window, program)
+		// draw(dots, window, program)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		gl.UseProgram(program)
+
+		// ----------------------------------------------
+		// Exec CPU and PPU
+		// PPU clock = 3*CPU clock
+		fmt.Printf("#%d: cycle: %d\n", i, *cycle)
+		cpu.ExecCpu(cycle)
+		for j := 0; j < 3; j++ {
+			ppu.ExecPpu(cycle)
+		}
+
+		// for x := range dots {
+		// 	for _, c := range dots[x] {
+		// 		c.draw()
+		// 	}
+		// }
+		dots[2][3].setColor([]byte{0x80, byte(i) & 0xFF, 0x80})
+		dots[2][3].draw()
+		dots[0][0].setColor([]byte{0x80, 0x80, 0x00})
+		dots[0][0].draw()
+		dots[rows-1][columns-1].draw()
+
+		glfw.PollEvents()
+		window.SwapBuffers()
+		i++
 	}
 }
 

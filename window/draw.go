@@ -2,49 +2,59 @@ package window
 
 import (
 	"github.com/go-gl/gl/v4.6-core/gl"
-	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 var (
-	square = []float32{
+	vertexPosition = []float32{
 		// square
 		-0.5, 0.5, 0,
 		-0.5, -0.5, 0,
 		0.5, -0.5, 0,
 		0.5, 0.5, 0,
-
-		// color
-		1, 0, 1,
 	}
 
-	vertexcolor = []float32{
-		1, 1, 0,
+	vertexInitColor = []float32{
+		// color
+		1, 1, 1,
 	}
 )
 
 type dot struct {
-	drawable uint32
-	colors   uint32
-	w        int
-	h        int
+	points      []float32
+	colorpoints []float32
+	w           int
+	h           int
 }
 
-func draw(dots [][]*dot, window *glfw.Window, program uint32) {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(program)
+func setColor() {}
 
-	for x := range dots {
-		for _, c := range dots[x] {
-			c.draw()
-		}
-	}
-	dots[2][3].draw()
-	dots[0][0].draw()
-	dots[rows-1][columns-1].draw()
-
-	glfw.PollEvents()
-	window.SwapBuffers()
+func (c *dot) setColor(colors []byte) {
+	red := float32(colors[0]) / 0xFF
+	green := float32(colors[1]) / 0xFF
+	blue := float32(colors[2]) / 0xFF
+	res := make([]float32, 0)
+	res = append(res, float32(red), float32(green), float32(blue))
+	c.colorpoints = res
 }
+
+// func draw(dots [][]*dot, window *glfw.Window, program uint32) {
+// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+// 	gl.UseProgram(program)
+
+// 	// for x := range dots {
+// 	// 	for _, c := range dots[x] {
+// 	// 		c.draw()
+// 	// 	}
+// 	// }
+// 	dots[2][3].setColor([]byte{0x80, 0x00, 0x80})
+// 	dots[2][3].draw()
+// 	dots[0][0].setColor([]byte{0x80, 0x80, 0x00})
+// 	dots[0][0].draw()
+// 	dots[rows-1][columns-1].draw()
+
+// 	glfw.PollEvents()
+// 	window.SwapBuffers()
+// }
 
 func makeDots() [][]*dot {
 	dots := make([][]*dot, rows, rows)
@@ -59,10 +69,10 @@ func makeDots() [][]*dot {
 }
 
 func newDot(h, w int) *dot {
-	points := make([]float32, len(square), len(square))
-	copy(points, square)
+	points := make([]float32, len(vertexPosition), len(vertexPosition))
+	copy(points, vertexPosition)
 
-	for i := 0; i < 4*3; i++ {
+	for i := 0; i < len(points); i++ {
 		var position float32
 		var size float32
 		switch i % 3 {
@@ -83,16 +93,27 @@ func newDot(h, w int) *dot {
 		}
 	}
 
-	return &dot{
-		drawable: makeVao(points),
+	colorpoints := make([]float32, 0)
+	for i := 0; i < len(points)/3; i++ {
+		colorpoints = append(colorpoints, vertexInitColor...)
+	}
 
-		h: h,
-		w: w,
+	return &dot{
+		// drawable:    makeVao(append(points, colorpoints...)),
+		points:      points,
+		colorpoints: colorpoints,
+		h:           h,
+		w:           w,
 	}
 }
 
 func (c *dot) draw() {
-	gl.BindVertexArray(c.drawable)
+	colorpoints := make([]float32, 0)
+	for i := 0; i < len(c.points)/3; i++ {
+		colorpoints = append(colorpoints, c.colorpoints...)
+	}
+	drawable := makeVao(append(c.points, colorpoints...))
+	gl.BindVertexArray(drawable)
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, 4)
 }
 
