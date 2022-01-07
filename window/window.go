@@ -11,8 +11,11 @@ import (
 )
 
 const (
-	width  = 1024
 	height = 960
+	width  = 1024
+
+	rows    = 240
+	columns = 256
 
 	vertexShaderSource = `
 		#version 410
@@ -29,9 +32,6 @@ const (
 			frag_colour = vec4(1, 1, 1, 1.0);
 		}
 	` + "\x00"
-
-	rows    = 256
-	columns = 240
 )
 
 var (
@@ -46,11 +46,11 @@ var (
 	}
 )
 
-type cell struct {
+type dot struct {
 	drawable uint32
 
-	x int
-	y int
+	w int
+	h int
 }
 
 func Window() {
@@ -60,40 +60,42 @@ func Window() {
 	defer glfw.Terminate()
 	program := initOpenGL()
 
-	cells := makeCells()
+	dots := makeDots()
 	for !window.ShouldClose() {
-		draw(cells, window, program)
+		draw(dots, window, program)
 	}
 }
 
-func draw(cells [][]*cell, window *glfw.Window, program uint32) {
+func draw(dots [][]*dot, window *glfw.Window, program uint32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(program)
 
-	// for x := range cells {
-	// 	for _, c := range cells[x] {
+	// for x := range dots {
+	// 	for _, c := range dots[x] {
 	// 		c.draw()
 	// 	}
 	// }
-	cells[2][3].draw()
+	dots[2][3].draw()
+	dots[0][0].draw()
+	dots[rows-1][columns-1].draw()
 
 	glfw.PollEvents()
 	window.SwapBuffers()
 }
 
-func makeCells() [][]*cell {
-	cells := make([][]*cell, rows, rows)
-	for x := 0; x < rows; x++ {
-		for y := 0; y < columns; y++ {
-			c := newCell(x, y)
-			cells[x] = append(cells[x], c)
+func makeDots() [][]*dot {
+	dots := make([][]*dot, rows, rows)
+	for h := 0; h < rows; h++ {
+		for w := 0; w < columns; w++ {
+			c := newDot(h, w)
+			dots[h] = append(dots[h], c)
 		}
 	}
 
-	return cells
+	return dots
 }
 
-func newCell(x, y int) *cell {
+func newDot(h, w int) *dot {
 	points := make([]float32, len(square), len(square))
 	copy(points, square)
 
@@ -103,10 +105,10 @@ func newCell(x, y int) *cell {
 		switch i % 3 {
 		case 0:
 			size = 1.0 / float32(columns)
-			position = float32(x) * size
+			position = float32(w) * size
 		case 1:
 			size = 1.0 / float32(rows)
-			position = float32(y) * size
+			position = float32(rows-1-h) * size
 		default:
 			continue
 		}
@@ -118,15 +120,15 @@ func newCell(x, y int) *cell {
 		}
 	}
 
-	return &cell{
+	return &dot{
 		drawable: makeVao(points),
 
-		x: x,
-		y: y,
+		h: h,
+		w: w,
 	}
 }
 
-func (c *cell) draw() {
+func (c *dot) draw() {
 	gl.BindVertexArray(c.drawable)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
 }
