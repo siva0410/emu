@@ -66,6 +66,7 @@ func main() {
 	// Init CPU and PPU
 	cpu.InitCpu()
 	ppu.InitPpu()
+	ppu.InitPalette()
 
 	// Create window
 	window.Window()
@@ -84,4 +85,5 @@ func main() {
 	// }
 
 	printMem()
+	fmt.Println(ppu.Palettes)
 }

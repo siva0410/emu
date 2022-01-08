@@ -268,16 +268,16 @@ func execOpecode(opecode byte) int {
 		fmt.Println("NOT IMPL INST:", inst_arr[opecode].name, operand)
 	}
 
-	fmt.Printf("NUM:0x%x\tOP:%s\tMODE:%s\tOPERAND:0x%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
-	fmt.Printf("A:0x%x\tX:0x%x\tY:0x%x\tZERO:%v\t\n", reg.A, reg.X, reg.Y, getStatus("zero"))
-	// check ppu register
-	fmt.Printf("ppuctrl:%x\t", ppu.Ppu_reg.Ppuctrl)
-	fmt.Printf("ppustatus:%x\t", ppu.Ppu_reg.Ppustatus)
-	fmt.Printf("oamaddr:%x\t\n", ppu.Ppu_reg.Oamaddr)
-	fmt.Printf("oamdata:%x\t", ppu.Ppu_reg.Oamdata)
-	fmt.Printf("ppuaddr:%x\t", ppu.Ppu_reg.Ppuaddr)
-	fmt.Printf("ppudata:%x\t\n", ppu.Ppu_reg.Ppudata)
-	fmt.Printf("MEM ppuaddr:%x\n\n", ppu.PPU_PTR)
+	// fmt.Printf("NUM:0x%x\tOP:%s\tMODE:%s\tOPERAND:0x%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
+	// fmt.Printf("A:0x%x\tX:0x%x\tY:0x%x\tZERO:%v\t\n", reg.A, reg.X, reg.Y, getStatus("zero"))
+	// // check ppu register
+	// fmt.Printf("ppuctrl:%x\t", ppu.Ppu_reg.Ppuctrl)
+	// fmt.Printf("ppustatus:%x\t", ppu.Ppu_reg.Ppustatus)
+	// fmt.Printf("oamaddr:%x\t\n", ppu.Ppu_reg.Oamaddr)
+	// fmt.Printf("oamdata:%x\t", ppu.Ppu_reg.Oamdata)
+	// fmt.Printf("ppuaddr:%x\t", ppu.Ppu_reg.Ppuaddr)
+	// fmt.Printf("ppudata:%x\t\n", ppu.Ppu_reg.Ppudata)
+	// fmt.Printf("MEM ppuaddr:%x\n\n", ppu.PPU_PTR)
 
 	return inst_arr[opecode].cycle
 }
@@ -299,5 +299,5 @@ func ExecCpu(cycle *int) {
 	opecode := fetchPC()
 	reg.PC++
 
-	*cycle += execOpecode(opecode)
+	*cycle += execOpecode(opecode) * 3
 }

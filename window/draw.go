@@ -22,11 +22,20 @@ var (
 type dot struct {
 	points      []float32
 	colorpoints []float32
+	palette     byte
+	sprite      byte
 	w           int
 	h           int
 }
 
-func setColor() {}
+func (c *dot) setPalette(colors []byte) {
+	red := float32(colors[0]) / 0xFF
+	green := float32(colors[1]) / 0xFF
+	blue := float32(colors[2]) / 0xFF
+	res := make([]float32, 0)
+	res = append(res, float32(red), float32(green), float32(blue))
+	c.colorpoints = res
+}
 
 func (c *dot) setColor(colors []byte) {
 	red := float32(colors[0]) / 0xFF
