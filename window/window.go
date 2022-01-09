@@ -28,6 +28,7 @@ const (
 		void main() {
 			gl_Position = vec4(vp, 1.0);
                         vColor = vec4(vc, 1.0);
+                        // vColor = vec4(1.0, 1.0, 1.0, 1.0);
 		}
 	` + "\x00"
 
@@ -53,10 +54,8 @@ func Window() {
 	var cycle *int
 	cycle = new(int)
 
-	i := 0
 	line := 0
 	for !window.ShouldClose() {
-		// draw(dots, window, program)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.UseProgram(program)
 
@@ -79,10 +78,6 @@ func Window() {
 				sprite_num := ppu.PPU_MEM[0x2000+0x20*((line+1)/8-1)+ws]
 				for l := 8 * ((line+1)/8 - 1); l < line+1; l++ {
 					for i := 8 * ws; i < 8*(ws+1); i++ {
-						if sprite_num != 0 {
-							fmt.Println("--------------------------------")
-							fmt.Println(ws, l, i, sprite_num, 0x10*sprite_num, ppu.PPU_MEM[0x10*uint16(0x10*sprite_num)])
-						}
 						s := (ppu.PPU_MEM[0x10*int(sprite_num)+l-8*((line+1)/8-1)] >> (7 - (i - 8*ws))) & 0b1
 						t := ((ppu.PPU_MEM[0x08+0x10*int(sprite_num)+l-8*((line+1)/8-1)] >> (7 - (i - 8*ws))) & 0b1) << 1
 						dots[l][i].sprite = s + t
@@ -115,54 +110,13 @@ func Window() {
 		if line == 262 {
 			line = 0
 			ppu.UpdatePalette()
-			for x := range dots {
-				for _, dot := range dots[x] {
-					dot.setColor(ppu.Palettes[dot.palette][dot.sprite][:])
-					// dot.draw()
-					if dot.sprite != 0 {
-						// fmt.Println("--------------------------------")
-						// fmt.Println(dot.sprite)
-						fmt.Println(dot.sprite, dot.palette, dot.sprite)
-						dot.draw()
-					}
-				}
-			}
-			// for x := range dots {
-			// 	for _, c := range dots[x] {
-			// 		c.draw()
-			// 	}
-			// }
-			// dots[2][3].setColor([]byte{0x80, byte(i) & 0xFF, 0x80})
-			// dots[2][3].draw()
 
-			// dots[0][0].setColor([]byte{0x80, 0x80, 0x00})
-			// dots[0][0].draw()
-			// dots[rows-1][columns-1].draw()
+			draw(dots)
+
 			glfw.PollEvents()
 			window.SwapBuffers()
 
 		}
-
-		// for x := range dots {
-		// 	for _, c := range dots[x] {
-		// 		fmt.Println(c.sprite, c.palette)
-		// 	}
-		// }
-		// // for x := range dots {
-		// // 	for _, c := range dots[x] {
-		// // 		c.draw()
-		// // 	}
-		// // }
-		// dots[2][3].setColor([]byte{0x80, byte(i) & 0xFF, 0x80})
-		// dots[2][3].draw()
-
-		// dots[0][0].setColor([]byte{0x80, 0x80, 0x00})
-		// dots[0][0].draw()
-		// dots[rows-1][columns-1].draw()
-
-		// glfw.PollEvents()
-		// window.SwapBuffers()
-		i++
 	}
 }
 
