@@ -19,20 +19,16 @@ var PalettesTable = [...][3]byte{
 	{0x99, 0xFF, 0xFC}, {0xDD, 0xDD, 0xDD}, {0x11, 0x11, 0x11}, {0x11, 0x11, 0x11},
 }
 
-var Palettes [4][4][3]byte
-
-func InitPalette() {
-	for i := 0; i < 4; i++ {
-		for j := 0; j < 4; j++ {
-			Palettes[i][j] = PalettesTable[PPU_MEM[0x3f00+4*i+j]]
-		}
-	}
-}
+var Palettes [8][4][3]byte
 
 func UpdatePalette() {
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 8; i++ {
 		for j := 0; j < 4; j++ {
-			Palettes[i][j] = PalettesTable[PPU_MEM[0x3f00+4*i+j]]
+			if i != 0 && j == 0 {
+				Palettes[i][j] = Palettes[0][0]
+			} else {
+				Palettes[i][j] = PalettesTable[PPU_MEM[0x3f00+4*i+j]]
+			}
 		}
 	}
 }

@@ -1,6 +1,8 @@
 package window
 
 import (
+	"emu/ppu"
+
 	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
@@ -126,6 +128,28 @@ func (c *dot) draw() {
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, 4)
 }
 
+func draw(dots [][]*dot) {
+	vertexarray := make([]float32, 0)
+	for x := range dots {
+		for _, dot := range dots[x] {
+			dot.setColor(ppu.Palettes[dot.palette][dot.sprite][:])
+			pointarray := make([]float32, 0)
+			for i := 0; i < len(dot.points)/3; i++ {
+				pointarray = append(pointarray, dot.points[i*3:(i+1)*3]...)
+				pointarray = append(pointarray, dot.colorpoints...)
+			}
+			vertexarray = append(vertexarray, pointarray...)
+		}
+	}
+
+	drawable := makeVao(vertexarray)
+	gl.BindVertexArray(drawable)
+
+	for i := 0; i < 256*240; i++ {
+		gl.DrawArrays(gl.TRIANGLE_FAN, int32(4*i), 4)
+	}
+}
+
 // makeVao initializes and returns a vertex array from the points provided.
 func makeVao(points []float32) uint32 {
 	var vbo uint32
@@ -139,8 +163,8 @@ func makeVao(points []float32) uint32 {
 	gl.EnableVertexAttribArray(0)
 	gl.EnableVertexAttribArray(1)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 0, gl.PtrOffset(3*4*4))
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(3*4))
 
 	return vao
 }
