@@ -74,13 +74,14 @@ func Window() {
 
 		if (line+1)%8 == 0 && line < 240 {
 			// set sprite
-			for ws := 0; ws < columns/8; ws++ {
-				sprite_num := ppu.PPU_MEM[0x2000+0x20*((line+1)/8-1)+ws]
-				for l := 8 * ((line+1)/8 - 1); l < line+1; l++ {
-					for i := 8 * ws; i < 8*(ws+1); i++ {
-						s := (ppu.PPU_MEM[0x10*int(sprite_num)+l-8*((line+1)/8-1)] >> (7 - (i - 8*ws))) & 0b1
-						t := ((ppu.PPU_MEM[0x08+0x10*int(sprite_num)+l-8*((line+1)/8-1)] >> (7 - (i - 8*ws))) & 0b1) << 1
-						dots[l][i].sprite = s + t
+			sl := (line+1)/8 - 1
+			for sw := 0; sw < 256/8; sw++ {
+				sprite_num := ppu.PPU_MEM[0x2000+0x20*sl+sw]
+				for l := 0; l < 8; l++ {
+					for i := 0; i < 8; i++ {
+						s := (ppu.PPU_MEM[0x10*int(sprite_num)+l] >> (7 - i)) & 0b1
+						t := (ppu.PPU_MEM[0x08+0x10*int(sprite_num)+l] >> (7 - i)) & 0b1
+						dots[sl*8+l][sw*8+i].sprite = s + t<<1
 					}
 				}
 			}
@@ -88,19 +89,19 @@ func Window() {
 
 		if (line+1)%16 == 0 && line < 240 {
 			// set palette
-
-			for ps := 0; ps < columns/16; ps++ {
-				for l := 16 * ((line+1)/16 - 1); l < line+1; l++ {
-					for i := 16 * ps; i < 16*(ps+1); i++ {
+			pl := (line+1)/16 - 1
+			for pw := 0; pw < 256/16; pw++ {
+				for l := 0; l < 16; l++ {
+					for i := 0; i < 16; i++ {
 						switch {
-						case i < 8*(ps+1) && l < (line+1)/2:
-							dots[l][i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*((line+1)/16-1)+int(ps/4)] >> 0) & 0b11
-						case i >= 8*(ps+1) && l < (line+1)/2:
-							dots[l][i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*((line+1)/16-1)+int(ps/4)] >> 2) & 0b11
-						case i < 8*(ps+1) && l >= (line+1)/2:
-							dots[l][i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*((line+1)/16-1)+int(ps/4)] >> 4) & 0b11
-						case i >= 8*(ps+1) && l >= (line+1)/2:
-							dots[l][i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*((line+1)/16-1)+int(ps/4)] >> 6) & 0b11
+						case i < 8 && l < 8:
+							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 0) & 0b11
+						case i >= 8 && l < 8:
+							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 2) & 0b11
+						case i < 8 && l >= 8:
+							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 4) & 0b11
+						case i >= 8 && l >= 8:
+							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 6) & 0b11
 						}
 					}
 				}
