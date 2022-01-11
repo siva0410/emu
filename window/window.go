@@ -49,6 +49,9 @@ func Window() {
 	defer glfw.Terminate()
 	program := initOpenGL()
 
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.UseProgram(program)
+
 	dots := makeDots()
 
 	var cycle *int
@@ -56,10 +59,6 @@ func Window() {
 
 	line := 0
 	for !window.ShouldClose() {
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		gl.UseProgram(program)
-
-		// ----------------------------------------------
 		// Exec CPU and PPU
 		// PPU clock = 3*CPU clock
 		fmt.Printf("#cycle: %d\n", *cycle)
@@ -116,7 +115,6 @@ func Window() {
 
 			glfw.PollEvents()
 			window.SwapBuffers()
-
 		}
 	}
 }

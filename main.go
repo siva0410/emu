@@ -60,13 +60,12 @@ func printMem() {
 func main() {
 	// Read ROM
 	path := "./ROM/helloworld/helloworld.nes"
-	// path := "./ROM/tkshoot/SHOOT.nes"
+	// path := "./ROM/nestest.nes"
 	romloader.LoadRom(path)
 
 	// Init CPU and PPU
 	cpu.InitCpu()
 	ppu.InitPpu()
-	ppu.InitPalette()
 
 	// Create window
 	window.Window()
