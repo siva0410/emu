@@ -1,11 +1,15 @@
 package main
 
 import (
+	"emu/casette"
 	"emu/cpu"
 	"emu/ppu"
-	"emu/romloader"
 	"emu/window"
 	"fmt"
+	"runtime"
+
+	"github.com/go-gl/gl/v4.6-core/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 func printMem() {
@@ -57,31 +61,40 @@ func printMem() {
 	fmt.Printf("\n")
 }
 
+func RunNes() {
+	runtime.LockOSThread()
+
+	screen := window.InitGlfw()
+	defer glfw.Terminate()
+	program := window.InitOpenGL()
+
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.UseProgram(program)
+
+	var cycle *int
+	cycle = new(int)
+
+	for !screen.ShouldClose() {
+		// Exec CPU and PPU
+		// PPU clock = 3*CPU clock
+		fmt.Printf("#cycle: %d\n", *cycle)
+		cpu.ExecCpu(cycle)
+		ppu.ExecPpu(cycle, screen)
+	}
+}
+
 func main() {
 	// Read ROM
 	path := "./ROM/helloworld/helloworld.nes"
 	// path := "./ROM/nestest.nes"
-	romloader.LoadRom(path)
+	casette.SetRom(path)
 
 	// Init CPU and PPU
 	cpu.InitCpu()
 	ppu.InitPpu()
 
 	// Create window
-	window.Window()
-
-	// var cycle *int
-	// cycle = new(int)
-	// for i := 0; i < 200; i++ {
-	// 	// Exec CPU and PPU
-	// 	// PPU clock = 3*CPU clock
-	// 	fmt.Printf("#%d: cycle: %d\n", i, *cycle)
-
-	// 	cpu.ExecCpu(cycle)
-	// 	for j := 0; j < 3; j++ {
-	// 		ppu.ExecPpu(cycle)
-	// 	}
-	// }
+	RunNes()
 
 	printMem()
 	fmt.Println(ppu.Palettes)

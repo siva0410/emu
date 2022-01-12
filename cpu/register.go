@@ -1,9 +1,5 @@
 package cpu
 
-import (
-	"emu/bus"
-)
-
 /* register */
 type Register struct {
 	A  byte
@@ -39,7 +35,7 @@ func initRegister() *Register {
 func resetRegister() *Register {
 	lower_addr := 0xFFFC
 	upper_addr := 0xFFFD
-	reset_point := uint16(bus.CPU_MEM[lower_addr]) + (uint16(bus.CPU_MEM[upper_addr]) << 0x8)
+	reset_point := uint16(CPU_MEM[lower_addr]) + (uint16(CPU_MEM[upper_addr]) << 0x8)
 	reset_reg := new(Register)
 	reset_reg.A = 0x00
 	reset_reg.X = 0x00
@@ -163,5 +159,5 @@ func setNegativeFlag(num uint) {
 
 // Fetch inst by PC
 func fetchPC() byte {
-	return bus.CPU_MEM[reg.PC]
+	return CPU_MEM[reg.PC]
 }

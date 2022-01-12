@@ -1,11 +1,8 @@
 package window
 
 import (
-	"emu/cpu"
-	"emu/ppu"
 	"fmt"
 	"log"
-	"runtime"
 	"strings"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -42,85 +39,8 @@ const (
 	` + "\x00"
 )
 
-func Window() {
-	runtime.LockOSThread()
-
-	window := initGlfw()
-	defer glfw.Terminate()
-	program := initOpenGL()
-
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(program)
-
-	dots := makeDots()
-
-	var cycle *int
-	cycle = new(int)
-
-	line := 0
-	for !window.ShouldClose() {
-		// Exec CPU and PPU
-		// PPU clock = 3*CPU clock
-		fmt.Printf("#cycle: %d\n", *cycle)
-		cpu.ExecCpu(cycle)
-		// ppu.ExecPpu(cycle)
-
-		if *cycle >= 341 {
-			*cycle -= 341
-			line++
-			fmt.Println(line)
-		}
-
-		if (line+1)%8 == 0 && line < 240 {
-			// set sprite
-			sl := (line+1)/8 - 1
-			for sw := 0; sw < 256/8; sw++ {
-				sprite_num := ppu.PPU_MEM[0x2000+0x20*sl+sw]
-				for l := 0; l < 8; l++ {
-					for i := 0; i < 8; i++ {
-						s := (ppu.PPU_MEM[0x10*int(sprite_num)+l] >> (7 - i)) & 0b1
-						t := (ppu.PPU_MEM[0x08+0x10*int(sprite_num)+l] >> (7 - i)) & 0b1
-						dots[sl*8+l][sw*8+i].sprite = s + t<<1
-					}
-				}
-			}
-		}
-
-		if (line+1)%16 == 0 && line < 240 {
-			// set palette
-			pl := (line+1)/16 - 1
-			for pw := 0; pw < 256/16; pw++ {
-				for l := 0; l < 16; l++ {
-					for i := 0; i < 16; i++ {
-						switch {
-						case i < 8 && l < 8:
-							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 0) & 0b11
-						case i >= 8 && l < 8:
-							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 2) & 0b11
-						case i < 8 && l >= 8:
-							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 4) & 0b11
-						case i >= 8 && l >= 8:
-							dots[pl*16+l][pw*16+i].palette = (ppu.PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 6) & 0b11
-						}
-					}
-				}
-			}
-		}
-
-		if line == 262 {
-			line = 0
-			ppu.UpdatePalette()
-
-			draw(dots)
-
-			glfw.PollEvents()
-			window.SwapBuffers()
-		}
-	}
-}
-
 // initGlfw initializes glfw and returns a Window to use.
-func initGlfw() *glfw.Window {
+func InitGlfw() *glfw.Window {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
@@ -140,7 +60,7 @@ func initGlfw() *glfw.Window {
 }
 
 // initOpenGL initializes OpenGL and returns an intiialized program.
-func initOpenGL() uint32 {
+func InitOpenGL() uint32 {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}

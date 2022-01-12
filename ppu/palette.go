@@ -21,7 +21,7 @@ var PalettesTable = [...][3]byte{
 
 var Palettes [8][4][3]byte
 
-func UpdatePalette() {
+func updatePalette() {
 	for i := 0; i < 8; i++ {
 		for j := 0; j < 4; j++ {
 			if i != 0 && j == 0 {

@@ -1,10 +1,8 @@
 package cpu
 
 import (
+	"emu/casette"
 	"fmt"
-
-	"emu/bus"
-	"emu/ppu"
 )
 
 /*
@@ -92,7 +90,7 @@ func getOperand(mode string) uint16 {
 		reg.PC++
 		tmp = tmp + uint16(fetchPC())<<0x8
 		reg.PC++
-		operand = (uint16(bus.CPU_MEM[tmp]) + uint16(fetchPC())<<0x8)
+		operand = (uint16(CPU_MEM[tmp]) + uint16(fetchPC())<<0x8)
 		reg.PC++
 
 	default:
@@ -109,40 +107,34 @@ func execOpecode(opecode byte) int {
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.A = bus.CPU_MEM[operand]
+		reg.A = CPU_MEM[operand]
 		// check ppu_addr register
-		ppu.CheckPpuPtr(operand)
 
 	case "LDX":
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.X = bus.CPU_MEM[operand]
+		reg.X = CPU_MEM[operand]
 		// check ppu_addr register
-		ppu.CheckPpuPtr(operand)
 
 	case "LDY":
 		res = uint(operand)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.Y = bus.CPU_MEM[operand]
+		reg.Y = CPU_MEM[operand]
 		// check ppu_addr register
-		ppu.CheckPpuPtr(operand)
 
 	case "STA":
-		bus.CPU_MEM[operand] = reg.A
+		CPU_MEM[operand] = reg.A
 		// check ppu_addr register
-		ppu.CheckPpuPtr(operand)
 
 	case "STX":
-		bus.CPU_MEM[operand] = reg.X
+		CPU_MEM[operand] = reg.X
 		// check ppu_addr register
-		ppu.CheckPpuPtr(operand)
 
 	case "STY":
-		bus.CPU_MEM[operand] = reg.Y
+		CPU_MEM[operand] = reg.Y
 		// check ppu_addr register
-		ppu.CheckPpuPtr(operand)
 
 	case "TAX":
 		res = uint(reg.A)
@@ -185,13 +177,13 @@ func execOpecode(opecode byte) int {
 	// case "PHA":
 	// case "PLA":
 	// case "ADC":
-	// 	reg.A = reg.A + bus.CPU_MEM[operand] + getStatus("carry")
+	// 	reg.A = reg.A + CPU_MEM[operand] + getStatus("carry")
 	// case "SBC":
 	// case "CPX":
 	// case "CPY":
 	// case "CMP":
 	// case "AND":
-	// 	reg.A = reg.A & bus.CPU_MEM[operand]
+	// 	reg.A = reg.A & CPU_MEM[operand]
 	// case "EOR":
 	// case "ORA":
 	// case "BIT":
@@ -212,8 +204,8 @@ func execOpecode(opecode byte) int {
 		setNegativeFlag(res)
 
 	case "INC":
-		bus.CPU_MEM[operand]++
-		res = uint(bus.CPU_MEM[operand])
+		CPU_MEM[operand]++
+		res = uint(CPU_MEM[operand])
 		setZeroFlag(res)
 		setNegativeFlag(res)
 
@@ -230,8 +222,8 @@ func execOpecode(opecode byte) int {
 		setNegativeFlag(res)
 
 	case "DEC":
-		bus.CPU_MEM[operand]--
-		res = uint(bus.CPU_MEM[operand])
+		CPU_MEM[operand]--
+		res = uint(CPU_MEM[operand])
 		setZeroFlag(res)
 		setNegativeFlag(res)
 
@@ -271,19 +263,24 @@ func execOpecode(opecode byte) int {
 	// fmt.Printf("NUM:0x%x\tOP:%s\tMODE:%s\tOPERAND:0x%x\n", opecode, inst_arr[opecode].name, inst_arr[opecode].mode, operand)
 	// fmt.Printf("A:0x%x\tX:0x%x\tY:0x%x\tZERO:%v\t\n", reg.A, reg.X, reg.Y, getStatus("zero"))
 	// // check ppu register
-	// fmt.Printf("ppuctrl:%x\t", ppu.Ppu_reg.Ppuctrl)
-	// fmt.Printf("ppustatus:%x\t", ppu.Ppu_reg.Ppustatus)
-	// fmt.Printf("oamaddr:%x\t\n", ppu.Ppu_reg.Oamaddr)
-	// fmt.Printf("oamdata:%x\t", ppu.Ppu_reg.Oamdata)
-	// fmt.Printf("ppuaddr:%x\t", ppu.Ppu_reg.Ppuaddr)
-	// fmt.Printf("ppudata:%x\t\n", ppu.Ppu_reg.Ppudata)
-	// fmt.Printf("MEM ppuaddr:%x\n\n", ppu.PPU_PTR)
+	// fmt.Printf("ppuctrl:%x\t", Ppu_reg.Ppuctrl)
+	// fmt.Printf("ppustatus:%x\t", Ppu_reg.Ppustatus)
+	// fmt.Printf("oamaddr:%x\t\n", Ppu_reg.Oamaddr)
+	// fmt.Printf("oamdata:%x\t", Ppu_reg.Oamdata)
+	// fmt.Printf("ppuaddr:%x\t", Ppu_reg.Ppuaddr)
+	// fmt.Printf("ppudata:%x\t\n", Ppu_reg.Ppudata)
+	// fmt.Printf("MEM ppuaddr:%x\n\n", PPU_PTR)
+
+	CPU_MEM_CHK[operand] = true
 
 	return inst_arr[opecode].cycle
 }
 
 // Init CPU
 func InitCpu() {
+	// Read Rom
+	copy(CPU_MEM[PRG_ROM_ADDR:], casette.Prg_rom[:])
+
 	// init register
 	reg = initRegister()
 	reg = resetRegister()

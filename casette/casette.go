@@ -1,16 +1,16 @@
-package romloader
+package casette
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
-	"emu/bus"
-	"emu/ppu"
 )
 
+var Prg_rom []byte
+var Chr_rom []byte
+
 // Read ROM and load to CPU/PPU memory
-func LoadRom(path string) {
+func SetRom(path string) {
 	f, err := os.Open(path)
 
 	if err != nil {
@@ -46,9 +46,6 @@ func LoadRom(path string) {
 	CHR_ROM_PAGES := int(rom[5])
 	CHR_ROM_START := HEADER_SIZE + PRG_ROM_PAGES*PRG_ROM_SIZE
 
-	prg_rom := rom[HEADER_SIZE : HEADER_SIZE+PRG_ROM_PAGES*PRG_ROM_SIZE]
-	chr_rom := rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
-
-	copy(bus.CPU_MEM[bus.PRG_ROM_ADDR:], prg_rom[:])
-	copy(ppu.PPU_MEM[bus.CHR_ROM_ADDR:], chr_rom[:])
+	Prg_rom = rom[HEADER_SIZE : HEADER_SIZE+PRG_ROM_PAGES*PRG_ROM_SIZE]
+	Chr_rom = rom[CHR_ROM_START : CHR_ROM_START+CHR_ROM_PAGES*CHR_ROM_SIZE]
 }

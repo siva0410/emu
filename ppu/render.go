@@ -1,12 +1,13 @@
-package window
+package ppu
 
 import (
-	"emu/ppu"
-
 	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
 var (
+	rows    = 240
+	columns = 256
+
 	vertexPosition = []float32{
 		// square
 		-0.5, 0.5, 0,
@@ -47,25 +48,6 @@ func (c *dot) setColor(colors []byte) {
 	res = append(res, float32(red), float32(green), float32(blue))
 	c.colorpoints = res
 }
-
-// func draw(dots [][]*dot, window *glfw.Window, program uint32) {
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.UseProgram(program)
-
-// 	// for x := range dots {
-// 	// 	for _, c := range dots[x] {
-// 	// 		c.draw()
-// 	// 	}
-// 	// }
-// 	dots[2][3].setColor([]byte{0x80, 0x00, 0x80})
-// 	dots[2][3].draw()
-// 	dots[0][0].setColor([]byte{0x80, 0x80, 0x00})
-// 	dots[0][0].draw()
-// 	dots[rows-1][columns-1].draw()
-
-// 	glfw.PollEvents()
-// 	window.SwapBuffers()
-// }
 
 func makeDots() [][]*dot {
 	dots := make([][]*dot, rows, rows)
@@ -118,21 +100,11 @@ func newDot(h, w int) *dot {
 	}
 }
 
-func (c *dot) draw() {
-	colorpoints := make([]float32, 0)
-	for i := 0; i < len(c.points)/3; i++ {
-		colorpoints = append(colorpoints, c.colorpoints...)
-	}
-	drawable := makeVao(append(c.points, colorpoints...))
-	gl.BindVertexArray(drawable)
-	gl.DrawArrays(gl.TRIANGLE_FAN, 0, 4)
-}
-
 func draw(dots [][]*dot) {
 	vertexarray := make([]float32, 0)
 	for x := range dots {
 		for _, dot := range dots[x] {
-			dot.setColor(ppu.Palettes[dot.palette][dot.sprite][:])
+			dot.setColor(Palettes[dot.palette][dot.sprite][:])
 			pointarray := make([]float32, 0)
 			for i := 0; i < len(dot.points)/3; i++ {
 				pointarray = append(pointarray, dot.points[i*3:(i+1)*3]...)
