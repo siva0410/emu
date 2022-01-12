@@ -1,11 +1,8 @@
 package window
 
 import (
-	"emu/cpu"
-	"emu/ppu"
 	"fmt"
 	"log"
-	"runtime"
 	"strings"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -42,30 +39,8 @@ const (
 	` + "\x00"
 )
 
-func Window() {
-	runtime.LockOSThread()
-
-	window := initGlfw()
-	defer glfw.Terminate()
-	program := initOpenGL()
-
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(program)
-
-	var cycle *int
-	cycle = new(int)
-
-	for !window.ShouldClose() {
-		// Exec CPU and PPU
-		// PPU clock = 3*CPU clock
-		fmt.Printf("#cycle: %d\n", *cycle)
-		cpu.ExecCpu(cycle)
-		ppu.ExecPpu(cycle, window)
-	}
-}
-
 // initGlfw initializes glfw and returns a Window to use.
-func initGlfw() *glfw.Window {
+func InitGlfw() *glfw.Window {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
@@ -85,7 +60,7 @@ func initGlfw() *glfw.Window {
 }
 
 // initOpenGL initializes OpenGL and returns an intiialized program.
-func initOpenGL() uint32 {
+func InitOpenGL() uint32 {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}

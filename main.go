@@ -6,6 +6,10 @@ import (
 	"emu/romloader"
 	"emu/window"
 	"fmt"
+	"runtime"
+
+	"github.com/go-gl/gl/v4.6-core/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 func printMem() {
@@ -57,6 +61,28 @@ func printMem() {
 	fmt.Printf("\n")
 }
 
+func RunNes() {
+	runtime.LockOSThread()
+
+	screen := window.InitGlfw()
+	defer glfw.Terminate()
+	program := window.InitOpenGL()
+
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.UseProgram(program)
+
+	var cycle *int
+	cycle = new(int)
+
+	for !screen.ShouldClose() {
+		// Exec CPU and PPU
+		// PPU clock = 3*CPU clock
+		fmt.Printf("#cycle: %d\n", *cycle)
+		cpu.ExecCpu(cycle)
+		ppu.ExecPpu(cycle, screen)
+	}
+}
+
 func main() {
 	// Read ROM
 	path := "./ROM/helloworld/helloworld.nes"
@@ -68,7 +94,7 @@ func main() {
 	ppu.InitPpu()
 
 	// Create window
-	window.Window()
+	RunNes()
 
 	printMem()
 	fmt.Println(ppu.Palettes)
