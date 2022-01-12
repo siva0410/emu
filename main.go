@@ -70,19 +70,6 @@ func main() {
 	// Create window
 	window.Window()
 
-	// var cycle *int
-	// cycle = new(int)
-	// for i := 0; i < 200; i++ {
-	// 	// Exec CPU and PPU
-	// 	// PPU clock = 3*CPU clock
-	// 	fmt.Printf("#%d: cycle: %d\n", i, *cycle)
-
-	// 	cpu.ExecCpu(cycle)
-	// 	for j := 0; j < 3; j++ {
-	// 		ppu.ExecPpu(cycle)
-	// 	}
-	// }
-
 	printMem()
 	fmt.Println(ppu.Palettes)
 }
