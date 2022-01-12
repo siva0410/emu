@@ -2,6 +2,9 @@ package ppu
 
 import (
 	"emu/bus"
+	"fmt"
+
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 /*
@@ -162,9 +165,13 @@ func GetPpuMask(flagname string) bool {
 
 var ppu_addr_flag bool = false
 
+var dots [][]*dot
+
 func InitPpu() {
 	Ppu_reg = new(PpuRegister)
 	initPpuRegisters(Ppu_reg)
+
+	dots = makeDots()
 }
 
 func CheckPpuPtr(operand uint16) {
@@ -194,45 +201,59 @@ func CheckPpuPtr(operand uint16) {
 	}
 }
 
-func ExecPpu(cycle *int) {
+var line int
+
+func ExecPpu(cycle *int, window *glfw.Window) {
 	// Set sprite
-	line := 0
 	if *cycle >= 341 {
-		// set sprites
 		*cycle -= 341
 		line++
+		fmt.Println(line)
 	}
 
-	if line%8 == 0 && line <= 240 {
+	if (line+1)%8 == 0 && line < 240 {
+		// set sprite
+		sl := (line+1)/8 - 1
+		for sw := 0; sw < 256/8; sw++ {
+			sprite_num := PPU_MEM[0x2000+0x20*sl+sw]
+			for l := 0; l < 8; l++ {
+				for i := 0; i < 8; i++ {
+					s := (PPU_MEM[0x10*int(sprite_num)+l] >> (7 - i)) & 0b1
+					t := (PPU_MEM[0x08+0x10*int(sprite_num)+l] >> (7 - i)) & 0b1
+					dots[sl*8+l][sw*8+i].sprite = s + t<<1
+				}
+			}
+		}
+	}
+
+	if (line+1)%16 == 0 && line < 240 {
 		// set palette
+		pl := (line+1)/16 - 1
+		for pw := 0; pw < 256/16; pw++ {
+			for l := 0; l < 16; l++ {
+				for i := 0; i < 16; i++ {
+					switch {
+					case i < 8 && l < 8:
+						dots[pl*16+l][pw*16+i].palette = (PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 0) & 0b11
+					case i >= 8 && l < 8:
+						dots[pl*16+l][pw*16+i].palette = (PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 2) & 0b11
+					case i < 8 && l >= 8:
+						dots[pl*16+l][pw*16+i].palette = (PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 4) & 0b11
+					case i >= 8 && l >= 8:
+						dots[pl*16+l][pw*16+i].palette = (PPU_MEM[0x2000+0x03C0+0x4*pl+int(pw/4)] >> 6) & 0b11
+					}
+				}
+			}
+		}
 	}
 
-	// fetchPpuRegisters(Ppu_reg)
-	// if Before_ppu_reg.Ppuaddr != *Ppu_reg.Ppuaddr {
-	// 	PPU_PTR = PPU_PTR << 0x8
-	// 	PPU_PTR += uint32(*Ppu_reg.Ppuaddr)
-	// 	PPU_PTR &= 0xFFFF
-	// }
-	// PPU_MEM[PPU_PTR] = *Ppu_reg.Ppudata
+	if line == 262 {
+		line = 0
+		UpdatePalette()
 
-	// // backup ppu_reg to before_ppu_reg
-	// copyPpuRegisters(Before_ppu_reg, Ppu_reg)
+		draw(dots)
 
-	// // check ppu register
-	// fmt.Printf("ppuctrl:%x\t", *Ppu_reg.Ppuctrl)
-	// fmt.Printf("ppustatus:%x\t", *Ppu_reg.Ppustatus)
-	// fmt.Printf("oamaddr:%x\t\n", *Ppu_reg.Oamaddr)
-	// fmt.Printf("oamdata:%x\t", *Ppu_reg.Oamdata)
-	// fmt.Printf("ppuaddr:%x\t", *Ppu_reg.Ppuaddr)
-	// fmt.Printf("ppudata:%x\t\n", *Ppu_reg.Ppudata)
-	// fmt.Printf("MEM ppuaddr:%x\n\n", PPU_PTR)
-
-	// fmt.Printf("before_ppuctrl:%x\t", Before_ppu_reg.Ppuctrl)
-	// fmt.Printf("before_ppustatus:%x\t", Before_ppu_reg.Ppustatus)
-	// fmt.Printf("before_oamaddr:%x\t\n", Before_ppu_reg.Oamaddr)
-	// fmt.Printf("before_oamdata:%x\t", Before_ppu_reg.Oamdata)
-	// fmt.Printf("before_ppuaddr:%x\t", Before_ppu_reg.Ppuaddr)
-	// fmt.Printf("before_ppudata:%x\t\n\n", Before_ppu_reg.Ppudata)
-
-	// Palette()
+		glfw.PollEvents()
+		window.SwapBuffers()
+	}
 }
