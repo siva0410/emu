@@ -102,161 +102,390 @@ func getOperand(mode string) uint16 {
 
 func execOpecode(opecode byte) int {
 	operand := getOperand(inst_arr[opecode].mode)
-	var res uint
+	var res byte
 	switch inst_arr[opecode].name {
 	case "LDA":
-		res = uint(operand)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.A = CPU_MEM[operand]
-		// check ppu_addr register
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
 
 	case "LDX":
-		res = uint(operand)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.X = CPU_MEM[operand]
-		// check ppu_addr register
+		setZeroFlag(reg.X)
+		setNegativeFlag(reg.X)
 
 	case "LDY":
-		res = uint(operand)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.Y = CPU_MEM[operand]
-		// check ppu_addr register
+		setZeroFlag(reg.Y)
+		setNegativeFlag(reg.Y)
 
 	case "STA":
 		CPU_MEM[operand] = reg.A
-		// check ppu_addr register
 
 	case "STX":
 		CPU_MEM[operand] = reg.X
-		// check ppu_addr register
 
 	case "STY":
 		CPU_MEM[operand] = reg.Y
-		// check ppu_addr register
 
 	case "TAX":
-		res = uint(reg.A)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.X = reg.A
+		setZeroFlag(reg.X)
+		setNegativeFlag(reg.X)
 
 	case "TAY":
-		res = uint(reg.A)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.Y = reg.A
+		setZeroFlag(reg.Y)
+		setNegativeFlag(reg.Y)
 
 	case "TXA":
-		res = uint(reg.X)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.A = reg.X
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
 
 	case "TYA":
-		res = uint(reg.Y)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.A = reg.Y
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
 
 	case "TXS":
-		res = uint(reg.X)
-		setZeroFlag(res)
-		setNegativeFlag(res)
 		reg.S = reg.X
 
 	case "TSX":
-		res = uint(reg.S)
+		reg.X = reg.S
+		setZeroFlag(reg.X)
+		setNegativeFlag(reg.X)
+
+	case "PHP":
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		CPU_MEM[SP] = reg.P
+		reg.S--
+
+	case "PLP":
+		reg.S++
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		reg.P = CPU_MEM[SP]
+
+	case "PHA":
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		CPU_MEM[SP] = reg.A
+		reg.S--
+
+	case "PLA":
+		reg.S++
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		reg.A = CPU_MEM[SP]
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
+
+	case "ADC":
+		overflow := (reg.A >> 6) & 0b1
+		reg.A = reg.A + CPU_MEM[operand]
+		if getStatus("carry") {
+			reg.A += 1
+		}
+		if overflow != (reg.A>>6)&0b1 {
+			setStatus("overflow", true)
+		}
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
+
+	case "SBC":
+		overflow := (reg.A >> 6) & 0b1
+		reg.A = reg.A - CPU_MEM[operand]
+		if !getStatus("carry") {
+			reg.A -= 1
+		}
+		if overflow != (reg.A>>6)&0b1 {
+			setStatus("overflow", true)
+		}
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
+
+	case "CPX":
+		res = reg.X - CPU_MEM[operand]
+		setCarryFlag(res)
 		setZeroFlag(res)
 		setNegativeFlag(res)
-		reg.X = reg.S
 
-	// case "PHP":
-	// case "PLP":
-	// case "PHA":
-	// case "PLA":
-	// case "ADC":
-	// 	reg.A = reg.A + CPU_MEM[operand] + getStatus("carry")
-	// case "SBC":
-	// case "CPX":
-	// case "CPY":
-	// case "CMP":
-	// case "AND":
-	// 	reg.A = reg.A & CPU_MEM[operand]
-	// case "EOR":
-	// case "ORA":
-	// case "BIT":
-	// case "ASL":
-	// case "LSR":
-	// case "ROL":
-	// case "ROR":
+	case "CPY":
+		res = reg.Y - CPU_MEM[operand]
+		setCarryFlag(res)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "CMP":
+		res = reg.A - CPU_MEM[operand]
+		setCarryFlag(res)
+		setZeroFlag(res)
+		setNegativeFlag(res)
+
+	case "AND":
+		reg.A = reg.A & CPU_MEM[operand]
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
+
+	case "EOR":
+		reg.A = reg.A ^ CPU_MEM[operand]
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
+
+	case "ORA":
+		reg.A = reg.A | CPU_MEM[operand]
+		setZeroFlag(reg.A)
+		setNegativeFlag(reg.A)
+
+	case "BIT":
+		if CPU_MEM[operand]&reg.A == 0 {
+			setStatus("zero", true)
+		} else {
+			setStatus("zero", false)
+		}
+		if CPU_MEM[operand]>>6 == 1 {
+			setStatus("overflow", true)
+		} else {
+			setStatus("overflow", false)
+		}
+		setNegativeFlag(CPU_MEM[operand])
+
+	case "ASL":
+		if inst_arr[opecode].mode == "ACCUM" {
+			if reg.A>>7 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			reg.A = reg.A << 1
+			setZeroFlag(reg.A)
+			setNegativeFlag(reg.A)
+		} else {
+			if CPU_MEM[operand]>>7 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			CPU_MEM[operand] = CPU_MEM[operand] << 1
+			setZeroFlag(CPU_MEM[operand])
+			setNegativeFlag(CPU_MEM[operand])
+		}
+
+	case "LSR":
+		if inst_arr[opecode].mode == "ACCUM" {
+			if reg.A&0b1 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			reg.A = reg.A >> 1
+			setZeroFlag(reg.A)
+			setNegativeFlag(reg.A)
+		} else {
+			if CPU_MEM[operand]&0b1 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			CPU_MEM[operand] = CPU_MEM[operand] >> 1
+			setZeroFlag(CPU_MEM[operand])
+			setNegativeFlag(CPU_MEM[operand])
+		}
+
+	case "ROL":
+		if inst_arr[opecode].mode == "ACCUM" {
+			if reg.A>>7 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			reg.A = reg.A << 1
+			if getStatus("carry") {
+				reg.A += 1
+			}
+			setZeroFlag(reg.A)
+			setNegativeFlag(reg.A)
+		} else {
+			if CPU_MEM[operand]>>7 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			CPU_MEM[operand] = CPU_MEM[operand] << 1
+			if getStatus("carry") {
+				CPU_MEM[operand] += 1
+			}
+			setZeroFlag(CPU_MEM[operand])
+			setNegativeFlag(CPU_MEM[operand])
+		}
+
+	case "ROR":
+		if inst_arr[opecode].mode == "ACCUM" {
+			if reg.A&0b1 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			reg.A = reg.A >> 1
+			if getStatus("carry") {
+				reg.A += 1 << 7
+			}
+			setZeroFlag(reg.A)
+			setNegativeFlag(reg.A)
+		} else {
+			if CPU_MEM[operand]&0b1 == 1 {
+				setStatus("carry", true)
+			} else {
+				setStatus("carry", false)
+			}
+			CPU_MEM[operand] = CPU_MEM[operand] >> 1
+			if getStatus("carry") {
+				CPU_MEM[operand] += 1 << 7
+			}
+			setZeroFlag(CPU_MEM[operand])
+			setNegativeFlag(CPU_MEM[operand])
+		}
+
 	case "INX":
 		reg.X++
-		res = uint(reg.X)
-		setZeroFlag(res)
-		setNegativeFlag(res)
+		setZeroFlag(reg.X)
+		setNegativeFlag(reg.X)
 
 	case "INY":
 		reg.Y++
-		res = uint(reg.Y)
-		setZeroFlag(res)
-		setNegativeFlag(res)
+		setZeroFlag(reg.Y)
+		setNegativeFlag(reg.Y)
 
 	case "INC":
 		CPU_MEM[operand]++
-		res = uint(CPU_MEM[operand])
-		setZeroFlag(res)
-		setNegativeFlag(res)
+		setZeroFlag(CPU_MEM[operand])
+		setNegativeFlag(CPU_MEM[operand])
 
 	case "DEX":
 		reg.X--
-		res = uint(reg.X)
-		setZeroFlag(res)
-		setNegativeFlag(res)
+		setZeroFlag(reg.X)
+		setNegativeFlag(reg.X)
 
 	case "DEY":
 		reg.Y--
-		res = uint(reg.Y)
-		setZeroFlag(res)
-		setNegativeFlag(res)
+		setZeroFlag(reg.Y)
+		setNegativeFlag(reg.Y)
 
 	case "DEC":
 		CPU_MEM[operand]--
-		res = uint(CPU_MEM[operand])
-		setZeroFlag(res)
-		setNegativeFlag(res)
+		setZeroFlag(CPU_MEM[operand])
+		setNegativeFlag(CPU_MEM[operand])
 
-	// case "CLC":
-	// case "CLI":
-	// case "CLV":
-	// case "CLD":
-	// case "SEC":
-	case "SEI":
+	case "CLC":
+		setStatus("carry", false)
+
+	case "SEC":
+		setStatus("carry", true)
+
+	case "CLI":
 		setStatus("interrupt_disable", false)
-	// case "SED":
-	// case "NOP":
+
+	case "SEI":
+		setStatus("interrupt_disable", true)
+
+	case "CLD":
+		setStatus("decimal", false)
+
+	case "SED":
+		setStatus("decimal", true)
+
+	case "CLV":
+		setStatus("overflow", false)
+
+	case "NOP":
+		/* nop */
+
 	case "BRK":
 		if !getStatus("interrupt_disable") {
-			// interrupt handler
+			setStatus("b_flag1", true)
+			SP := 0x0100 + uint16(reg.S)&0xFF
+			CPU_MEM[SP] = byte((reg.PC >> 8) & 0xFF)
+			reg.S--
+			SP = 0x0100 + uint16(reg.S)&0xFF
+			CPU_MEM[SP] = byte(reg.PC & 0xFF)
+			reg.S--
+			SP = 0x0100 + uint16(reg.S)&0xFF
+			CPU_MEM[SP] = reg.P
+			reg.S--
+			setStatus("interrupt_disable", true)
+			reg.PC = uint16(CPU_MEM[0xFFFE]) & 0xFF
+			reg.PC += uint16(CPU_MEM[0xFFFF]) << 8
 		}
-	// case "JSR":
+
+	case "RTI":
+		reg.S++
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		reg.P = CPU_MEM[SP]
+		reg.S++
+		SP = 0x0100 + uint16(reg.S)&0xFF
+		reg.PC = uint16(CPU_MEM[SP]) & 0xFF
+		reg.S++
+		SP = 0x0100 + uint16(reg.S)&0xFF
+		reg.PC += uint16(CPU_MEM[SP]) << 8
+
 	case "JMP":
 		reg.PC = operand
-	// case "RTI":
-	// case "RTS":
-	// case "BPL":
-	// case "BMI":
-	// case "BVC":
-	// case "BVS":
-	// case "BCC":
-	// case "BCS":
+
+	case "JSR":
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		CPU_MEM[SP] = byte((reg.PC >> 8) & 0xFF)
+		reg.S--
+		SP = 0x0100 + uint16(reg.S)&0xFF
+		CPU_MEM[SP] = byte(reg.PC & 0xFF)
+		reg.S--
+		reg.PC = operand
+
+	case "RTS":
+		reg.S++
+		SP := 0x0100 + uint16(reg.S)&0xFF
+		reg.PC = uint16(CPU_MEM[SP]) & 0xFF
+		reg.S++
+		SP = 0x0100 + uint16(reg.S)&0xFF
+		reg.PC += uint16(CPU_MEM[SP]) << 8
+
+	case "BPL":
+		if !getStatus("negative") {
+			reg.PC = operand
+		}
+
+	case "BMI":
+		if getStatus("negative") {
+			reg.PC = operand
+		}
+
+	case "BVC":
+		if !getStatus("overflow") {
+			reg.PC = operand
+		}
+
+	case "BVS":
+		if getStatus("overflow") {
+			reg.PC = operand
+		}
+
+	case "BCC":
+		if !getStatus("carry") {
+			reg.PC = operand
+		}
+
+	case "BCS":
+		if getStatus("carry") {
+			reg.PC = operand
+		}
+
 	case "BNE":
 		if !getStatus("zero") {
 			reg.PC = operand
 		}
-	// case "BEQ":
+
+	case "BEQ":
+		if getStatus("zero") {
+			reg.PC = operand
+		}
+
 	default:
 		fmt.Println("NOT IMPL INST:", inst_arr[opecode].name, operand)
 	}

@@ -133,7 +133,7 @@ func getStatus(flagname string) bool {
 	return res
 }
 
-func setZeroFlag(num uint) {
+func setZeroFlag(num byte) {
 	if num == 0 {
 		setStatus("zero", true)
 	} else {
@@ -141,15 +141,15 @@ func setZeroFlag(num uint) {
 	}
 }
 
-// func setCarryFlag(num uint) {
-// 	if num>>7 == 1 {
-// 		setStatus("negative", true)
-// 	} else {
-// 		setStatus("negative", false)
-// 	}
-// }
+func setCarryFlag(num byte) {
+	if num >= 0 {
+		setStatus("carry", true)
+	} else {
+		setStatus("carry", false)
+	}
+}
 
-func setNegativeFlag(num uint) {
+func setNegativeFlag(num byte) {
 	if num>>7 == 1 {
 		setStatus("negative", true)
 	} else {
