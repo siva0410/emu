@@ -86,8 +86,18 @@ func RunNes() {
 
 func main() {
 	// Read ROM
-	path := "./ROM/helloworld/helloworld.nes"
-	// path := "./ROM/nestest.nes"
+	fmt.Print("1. helloworld\n2. nestest\n> ")
+	var num int
+	fmt.Scanf("%d", &num)
+
+	var path string
+	switch num {
+	case 1:
+		path = "./ROM/helloworld/helloworld.nes"
+	case 2:
+		path = "./ROM/nestest.nes"
+	}
+
 	casette.SetRom(path)
 
 	// Init CPU and PPU
