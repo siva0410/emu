@@ -1,8 +1,9 @@
 package cpu
 
 import (
-	"emu/casette"
 	"fmt"
+
+	"github.com/siva0410/emu/casette"
 )
 
 /*

@@ -1,10 +1,11 @@
 package ppu
 
 import (
-	"emu/casette"
 	"fmt"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
+
+	"github.com/siva0410/emu/casette"
 )
 
 var dots [][]*dot
