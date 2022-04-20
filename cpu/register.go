@@ -1,7 +1,7 @@
 package cpu
 
 import (
-	"emu/bus"
+	"github.com/siva0410/emu/bus"
 )
 
 /* register */

@@ -1,15 +1,16 @@
 package main
 
 import (
-	"emu/cpu"
-	"emu/ppu"
-	"emu/romloader"
-	"emu/window"
 	"fmt"
 	"runtime"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+
+	"github.com/siva0410/emu/cpu"
+	"github.com/siva0410/emu/ppu"
+	"github.com/siva0410/emu/romloader"
+	"github.com/siva0410/emu/window"
 )
 
 func printMem() {

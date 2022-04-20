@@ -3,8 +3,8 @@ package cpu
 import (
 	"fmt"
 
-	"emu/bus"
-	"emu/ppu"
+	"github.com/siva0410/emu/bus"
+	"github.com/siva0410/emu/ppu"
 )
 
 /*

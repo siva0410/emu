@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"emu/bus"
-	"emu/ppu"
+	"github.com/siva0410/emu/bus"
+	"github.com/siva0410/emu/ppu"
 )
 
 // Read ROM and load to CPU/PPU memory

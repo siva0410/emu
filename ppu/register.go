@@ -1,6 +1,6 @@
 package ppu
 
-import "emu/bus"
+import "github.com/siva0410/emu/bus"
 
 /*
    PPU memory map
